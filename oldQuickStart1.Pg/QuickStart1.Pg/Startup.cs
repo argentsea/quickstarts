@@ -9,10 +9,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ArgentSea.Sql;
-using Quckstart.Sql.Stores;
+using ArgentSea;
+using ArgentSea.Pg;
+using Quckstart.Pg.Stores;
 
-namespace Quckstart.Sql
+namespace Quckstart.Pg
 {
     public class Startup
     {
@@ -27,7 +28,16 @@ namespace Quckstart.Sql
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddLogging();
-            services.AddSqlServices(Configuration);
+            //services.Configure<PgDbConnectionOptions>(options => Configuration.GetSection("").Bind(options));
+
+            //services.AddPgServices(Configuration);
+            services.Configure<DataResilienceOptions>(Configuration);
+            services.Configure<DataSecurityOptions>(Configuration);
+            //services.Configure<PgDbConnectionOptions>(Configuration);
+            services.Configure<PgDbConnectionOptions>(options => Configuration.GetSection("PgDbConnections").Bind(options));
+            services.AddSingleton<PgDatabases>();
+
+
             services.AddSingleton<SubscriberStore>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }

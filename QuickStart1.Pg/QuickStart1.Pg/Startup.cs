@@ -9,10 +9,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ArgentSea.Sql;
-using Quckstart.Sql.Stores;
+using ArgentSea.Pg;
+using QuickStart1.Pg.Stores;
 
-namespace Quckstart.Sql
+namespace QuickStart1.Pg
 {
     public class Startup
     {
@@ -23,16 +23,14 @@ namespace Quckstart.Sql
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddLogging();
-            services.AddSqlServices(Configuration);
+            services.AddPgServices(Configuration);
             services.AddSingleton<SubscriberStore>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             if (env.IsDevelopment())
