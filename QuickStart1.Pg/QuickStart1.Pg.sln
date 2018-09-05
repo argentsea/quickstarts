@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2026
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuickStart1.Pg", "QuickStart1.Pg\QuickStart1.Pg.csproj", "{02EE69EA-09E7-49EF-80C2-DA34D1416B0B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuickStart1.Pg", "QuickStart1.Pg\QuickStart1.Pg.csproj", "{02EE69EA-09E7-49EF-80C2-DA34D1416B0B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuickStart1.Test", "QuickStart1.Test\QuickStart1.Test.csproj", "{89357F13-4168-4AA4-A52C-E8BB0FF46CC7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{02EE69EA-09E7-49EF-80C2-DA34D1416B0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{02EE69EA-09E7-49EF-80C2-DA34D1416B0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{02EE69EA-09E7-49EF-80C2-DA34D1416B0B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89357F13-4168-4AA4-A52C-E8BB0FF46CC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89357F13-4168-4AA4-A52C-E8BB0FF46CC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89357F13-4168-4AA4-A52C-E8BB0FF46CC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89357F13-4168-4AA4-A52C-E8BB0FF46CC7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
