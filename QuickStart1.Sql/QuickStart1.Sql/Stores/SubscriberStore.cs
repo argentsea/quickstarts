@@ -20,11 +20,11 @@ namespace Quckstart.Sql.Stores
 
         public async Task<Subscriber> GetSubscriber(int subscriberId, CancellationToken cancellation)
         {
-            var db = _dbs.DbConnections["MyDatabase"];
+            var db = _dbs["MyDatabase"];
             var prms = new QueryParameterCollection()
-                .AddSqlIntInParameter("@SubId", subscriberId);
-            Mapper.MapToOutParameters(prms, typeof(Subscriber), _logger);
-            return await db.QueryAsync<Subscriber>("ws.GetSubscriber", prms, cancellation);
+                .AddSqlIntInputParameter("@SubId", subscriberId)
+                .CreateOutputParameters<Subscriber>(_logger);
+            return await db.MapOutputAsync<Subscriber>("ws.GetSubscriber", prms, cancellation);
         }
     }
 }

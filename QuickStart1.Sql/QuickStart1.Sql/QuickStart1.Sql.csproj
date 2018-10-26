@@ -24,15 +24,13 @@
 
   <ItemGroup>
     <Reference Include="ArgentSea">
-      <HintPath>..\..\..\ArgentSea\ArgentSea.Shared\src\bin\Debug\netstandard2.0\ArgentSea.dll</HintPath>
+      <HintPath>..\..\..\ArgentSea.Sql\src\bin\Debug\netstandard2.0\ArgentSea.dll</HintPath>
     </Reference>
     <Reference Include="ArgentSea.Sql">
-      <HintPath>..\..\..\ArgentSea\ArgentSea.Sql\src\bin\Debug\netstandard2.0\ArgentSea.Sql.dll</HintPath>
+      <HintPath>..\..\..\ArgentSea.Sql\src\bin\Debug\netstandard2.0\ArgentSea.Sql.dll</HintPath>
     </Reference>
     <Reference Include="Polly">
-      <HintPath>..\..\..\..\Users\John\.nuget\packages\polly\6.0.1\lib\netstandard2.0\Polly.dll</HintPath>
-      <Private>true</Private>
-      <SpecificVersion>false</SpecificVersion>
+      <HintPath>..\..\..\..\..\Users\HicksJ\.nuget\packages\polly\6.1.0\lib\netstandard2.0\Polly.dll</HintPath>
     </Reference>
   </ItemGroup>
 
