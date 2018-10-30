@@ -15,17 +15,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="ArgentSea">
-      <HintPath>..\..\..\ArgentSea\ArgentSea.Shared\src\bin\Debug\netstandard2.0\ArgentSea.dll</HintPath>
-    </Reference>
-    <Reference Include="ArgentSea.Pg">
-      <HintPath>..\..\..\ArgentSea\ArgentSea.Pg\src\bin\Debug\netstandard2.0\ArgentSea.Pg.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\..\..\ArgentSea.Pg\src\ArgentSea.Pg.csproj" />
+    <ProjectReference Include="..\..\..\ArgentSea.Shared\src\ArgentSea.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="Npgsql">
-      <HintPath>..\..\..\..\Users\John\.nuget\packages\npgsql\4.0.2\lib\netstandard2.0\Npgsql.dll</HintPath>
+      <HintPath>..\..\..\..\..\Users\HicksJ\.nuget\packages\npgsql\4.0.3\lib\netstandard2.0\Npgsql.dll</HintPath>
     </Reference>
     <Reference Include="Polly">
-      <HintPath>..\..\..\..\Users\John\.nuget\packages\polly\6.0.1\lib\netstandard2.0\Polly.dll</HintPath>
+      <HintPath>..\..\..\..\..\Users\HicksJ\.nuget\packages\polly\6.1.0\lib\netstandard2.0\Polly.dll</HintPath>
     </Reference>
   </ItemGroup>
 

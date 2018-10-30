@@ -25,7 +25,12 @@ namespace QuickStart1.Pg.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Subscriber>> Get(int id, CancellationToken cancellation)
         {
-            return await _store.GetSubscriber(id, cancellation);
+            var result = await _store.GetSubscriber(id, cancellation);
+            if (result is null)
+            {
+                return NotFound();
+            }
+            return result;
         }
     }
 }

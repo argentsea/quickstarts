@@ -15,13 +15,4 @@
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="Npgsql">
-      <HintPath>..\..\..\..\Users\John\.nuget\packages\npgsql\4.0.2\lib\netstandard2.0\Npgsql.dll</HintPath>
-    </Reference>
-    <Reference Include="Polly">
-      <HintPath>..\..\..\..\Users\John\.nuget\packages\polly\6.0.1\lib\netstandard2.0\Polly.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>
