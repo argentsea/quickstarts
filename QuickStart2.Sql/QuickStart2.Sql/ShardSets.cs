@@ -14,10 +14,9 @@ namespace QuickStart2.Sql
     {
         public ShardSets(
             IOptions<SqlShardConnectionOptions<byte>> configOptions,
-            IOptions<DataSecurityOptions> securityOptions,
-            IOptions<DataResilienceOptions> resilienceStrategiesOptions,
+            IOptions<SqlGlobalPropertiesOptions> globalOptions,
             ILogger<ShardSets> logger
-        ) : base(configOptions, securityOptions, resilienceStrategiesOptions, logger)
+        ) : base(configOptions, globalOptions, logger)
         {
             //
         }

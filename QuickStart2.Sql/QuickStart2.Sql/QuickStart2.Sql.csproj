@@ -1,8 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <UserSecretsId>d3e4a797-e032-4a6a-8b57-dc823833cabf</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Sql\ShardUS.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Sql\ShardUS.sql" />
+  </ItemGroup>
 
   <ItemGroup>
     <Folder Include="wwwroot\" />
@@ -10,11 +19,12 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="5.0.0-beta" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="ArgentSea">
-      <HintPath>..\..\..\ArgentSea.Sql\src\bin\Debug\netstandard2.0\ArgentSea.dll</HintPath>
+      <HintPath>..\..\..\ArgentSea.Shared\src\bin\Debug\netstandard2.0\ArgentSea.dll</HintPath>
     </Reference>
     <Reference Include="ArgentSea.Sql">
       <HintPath>..\..\..\ArgentSea.Sql\src\bin\Debug\netstandard2.0\ArgentSea.Sql.dll</HintPath>

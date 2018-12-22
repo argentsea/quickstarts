@@ -2,24 +2,34 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
 using Microsoft.AspNetCore.Mvc;
 using ArgentSea;
 using ArgentSea.Sql;
+using QuickStart2.Sql.Stores;
+using QuickStart2.Sql.Models;
+using QuickStart2.Sql.InputModels;
+using ShardKey = ArgentSea.ShardKey<byte, int>;
 
 namespace QuickStart2.Sql.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
-    public class ValuesController : ControllerBase
+    public class CustomerController : ControllerBase
     {
-        ArgentSea.Sql.SqlDbConnectionOptions _dbConfig;
-        ArgentSea.Sql.SqlShardConnectionOptions<byte> _shardConfig;
+        private readonly CustomerStore _store;
 
+        public CustomerController(CustomerStore store)
+        {
+            _store = store;
+        }
 
         // GET api/values
         [HttpGet]
-        public ActionResult<IEnumerable<string>> Get()
+        public async Task<ActionResult<IEnumerable<CustomerListItem>>> Get(CancellationToken cancellation)
         {
+            return Ok(await _store.ListCustomers(cancellation));
+
             //_dbConfig.SqlDbConnections[""].DatabaseKey;
             //_dbConfig.SqlDbConnections[""].DataResilienceKey;
             //_dbConfig.SqlDbConnections[""].SecurityKey;
@@ -42,32 +52,39 @@ namespace QuickStart2.Sql.Controllers
             //_dbConfig.SqlDbConnections[0].DataConnection.ApplicationIntent
 
 
-            return new string[] { "value1", "value2" };
         }
 
-        // GET api/values/5
-        [HttpGet("{id}")]
-        public ActionResult<string> Get(int id)
+        // GET api/values/ABCDEFG
+        [HttpGet("{key}")]
+        public async Task<ActionResult<string>> Get([FromQuery]string key, CancellationToken cancellation)
         {
-            return "value";
+            var skey = ShardKey.FromExternalString(key);
+            return Ok(await _store.GetCustomer(skey, cancellation));
         }
 
         // POST api/values
         [HttpPost]
-        public void Post([FromBody] string value)
+        public async Task<ActionResult> Post([FromBody] CustomerInputModel customer, CancellationToken cancellation)
         {
+            var customerKey = await _store.CreateCustomer(customer, cancellation);
+            return Ok(customerKey);
         }
 
         // PUT api/values/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public async Task<ActionResult> Put(int id, [FromBody] CustomerModel customer, CancellationToken cancellation)
         {
+            await _store.SaveCustomer(customer, cancellation);
+            return Ok();
         }
 
         // DELETE api/values/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task<ActionResult> Delete(string key, CancellationToken cancellation)
         {
+            var skey = ShardKey.FromExternalString(key);
+            await _store.DeleteCustomer(skey, cancellation);
+            return Ok();
         }
     }
 }
