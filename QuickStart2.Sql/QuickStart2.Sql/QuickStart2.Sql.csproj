@@ -6,14 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Sql\ShardUS.sql" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="Sql\ShardUS.sql" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="wwwroot\" />
   </ItemGroup>
 

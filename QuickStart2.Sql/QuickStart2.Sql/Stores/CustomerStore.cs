@@ -27,17 +27,19 @@ namespace QuickStart2.Sql.Stores
 
     public class CustomerStore
     {
+        //private readonly SqlShardSets<byte>.ShardSet _shardSet;
         private readonly ShardSets.ShardSet _shardSet;
         private readonly ILogger<CustomerStore> _logger;
         private const char oCUSTOMER = 'c';
 
+        //public CustomerStore(ShardSetsBase<byte, SqlShardConnectionOptions<byte>> shardSets, ILogger<CustomerStore> logger)
         public CustomerStore(ShardSets shardSets, ILogger<CustomerStore> logger)
         {
             _shardSet = shardSets["Customers"];
             _logger = logger;
         }
 
-        public async Task<CustomerModel> GetCustomer(ShardKey<byte, int> customerKey, CancellationToken cancellation)
+        public async Task<CustomerModel> GetCustomer(ShardKey customerKey, CancellationToken cancellation)
         {
             var prms = new QueryParameterCollection()
                 .AddSqlIntInputParameter("@CustomerId", customerKey.RecordId)
@@ -52,7 +54,7 @@ namespace QuickStart2.Sql.Stores
         }
         public async Task<IList<CustomerListItem>> ListCustomers(CancellationToken cancellation)
         {
-            var cust = await _shardSet.ReadAll.MapListAsync<CustomerListItem>(DataProcedures.CustomerList, null, cancellation);
+            var cust = await _shardSet.ReadAll.MapListAsync<CustomerListItem>(DataProcedures.CustomerList, new QueryParameterCollection(), cancellation);
             return cust;
         }
         public async Task<ShardKey> CreateCustomer(CustomerInputModel customer, CancellationToken cancellation)

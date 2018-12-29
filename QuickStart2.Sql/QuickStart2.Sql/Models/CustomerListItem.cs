@@ -6,7 +6,7 @@ namespace QuickStart2.Sql.Models
 {
     public class CustomerListItem
     {
-        [MapShardKey('c', "CustomerId")]
+        [MapShardKey('c', "@CustomerId")]
         [MapToSqlInt("@CustomerId")]
         [MapToSqlSmallInt("@ShardId")]
         public ShardKey CustomerKey { get; set; }

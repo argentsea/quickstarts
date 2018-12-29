@@ -12,6 +12,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Http;
 using Microsoft.OpenApi.Models;
+using ArgentSea.Sql;
+using Microsoft.AspNetCore.Http;
 
 
 namespace QuickStart2.Sql
@@ -29,10 +31,15 @@ namespace QuickStart2.Sql
         {
             services.AddOptions();
             services.AddLogging();
+            services.AddSqlServices<byte>(this.Configuration);
+            services.AddSingleton<ShardSets>();
+
+            services.AddTransient<Stores.CustomerStore>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddSwaggerGen(o =>
             {
                 o.SwaggerDoc("v1", new OpenApiInfo() { Title = "ArgentSea Sharded WebService", Version = "v1" });
+                o.DescribeAllEnumsAsStrings();
             });
         }
 
@@ -46,6 +53,20 @@ namespace QuickStart2.Sql
             {
                 app.UseHsts();
             }
+
+            app.UseExceptionHandler(options =>
+            {
+                options.Run(async context =>
+                {
+                    context.Response.StatusCode = 500;
+                    context.Response.ContentType = "application/json";
+                    var contextFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+                    if (!(contextFeature is null))
+                    {
+                        await context.Response.WriteAsync(new ErrorModel(contextFeature.Error).ToJson());
+                    }
+                });
+            });
 
             app.UseHttpsRedirection();
             app.UseMvc();
