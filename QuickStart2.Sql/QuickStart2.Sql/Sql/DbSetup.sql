@@ -121,8 +121,7 @@ BEGIN;
 	FROM shd.Customers;
 END;
 GO
-ALTER PROCEDURE rd.CustomerGet (
-	@ShardId tinyint,
+ALTER PROCEDURE [rd].[CustomerGet] (
 	@CustomerId int, 
 	@CustomerTypeId tinyint OUTPUT, 
 	@Name nvarchar(255) OUTPUT
@@ -131,10 +130,7 @@ AS
 BEGIN;
 	SET NOCOUNT ON;
 
-	IF @ShardId <> ws.ShardId()
-	BEGIN;
-		THROW 50001, N'The expected shard id is not valid. Data configuration metadata may be corrupted.', 16;
-	END;
+	DECLARE @ShardId tinyint = ws.ShardId();
 
 	SELECT @CustomerTypeId = Customers.CustomerTypeId, @Name = Customers.Name
 	FROM shd.Customers

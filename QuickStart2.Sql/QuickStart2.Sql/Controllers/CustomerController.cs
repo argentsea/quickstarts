@@ -56,7 +56,7 @@ namespace QuickStart2.Sql.Controllers
 
         // GET api/values/ABCDEFG
         [HttpGet("{key}")]
-        public async Task<ActionResult<string>> Get([FromQuery]string key, CancellationToken cancellation)
+        public async Task<ActionResult<string>> Get(string key, CancellationToken cancellation)
         {
             var skey = ShardKey.FromExternalString(key);
             return Ok(await _store.GetCustomer(skey, cancellation));
@@ -71,8 +71,8 @@ namespace QuickStart2.Sql.Controllers
         }
 
         // PUT api/values/5
-        [HttpPut("{id}")]
-        public async Task<ActionResult> Put(int id, [FromBody] CustomerModel customer, CancellationToken cancellation)
+        [HttpPut]
+        public async Task<ActionResult> Put([FromBody] CustomerModel customer, CancellationToken cancellation)
         {
             await _store.SaveCustomer(customer, cancellation);
             return Ok();
