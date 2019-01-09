@@ -44,13 +44,7 @@ namespace QuickStart2.Sql.Stores
             var prms = new QueryParameterCollection()
                 .AddSqlIntInputParameter("@CustomerId", customerKey.RecordId)
                 .CreateOutputParameters<CustomerModel>(_logger);
-            var customer = await _shardSet[customerKey].Read.MapOutputAsync<CustomerModel>(DataProcedures.CustomerGet, prms, cancellation);
-            if (customer is null && _shardSet[customerKey].Read.ConnectionString != _shardSet[customerKey.ShardId].Write.ConnectionString)
-            {
-                // if we have id, we can assume that record exists. Therefore Null may be do to replication latency. Retry read on Write connection.
-                customer = await _shardSet[customerKey].Write.MapOutputAsync<CustomerModel>("ws.GetCustomer", prms, cancellation);
-            }
-            return customer;
+            return await _shardSet[customerKey].Read.MapOutputAsync<CustomerModel, LocationModel, ContactModel>(DataProcedures.CustomerGet, prms, cancellation);
         }
         public async Task<IList<CustomerListItem>> ListCustomers(CancellationToken cancellation)
         {

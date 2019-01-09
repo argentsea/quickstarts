@@ -17,8 +17,8 @@ namespace QuickStart2.Sql.Models
         [MapToSqlTinyInt("CustomerTypeId")]
         public CustomerType Type { get; set; }
 
-        public List<LocationModel> Locations { get; set; } = new List<LocationModel>();
+        public IList<LocationModel> Locations { get; set; } = new List<LocationModel>();
 
-        public List<ContactModel> Contacts { get; set; } = new List<ContactModel>();
+        public IList<ContactModel> Contacts { get; set; } = new List<ContactModel>();
     }
 }
