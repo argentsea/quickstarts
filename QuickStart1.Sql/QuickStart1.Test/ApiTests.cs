@@ -18,7 +18,7 @@ namespace Quickstart.Test
         public async void TestSubscriber(int subscriberId, string name, string expiration)
         {
             var client = new HttpClient();
-            var response = await client.GetAsync("http://localhost:64653/api/subscriber/" + subscriberId.ToString());
+            var response = await client.GetAsync("http://localhost:2912/api/subscriber/" + subscriberId.ToString());
 
             response.StatusCode.Should().Be(System.Net.HttpStatusCode.OK, "the response status code value should be “Ok”");
             var jsonResult = await response.Content.ReadAsStringAsync();

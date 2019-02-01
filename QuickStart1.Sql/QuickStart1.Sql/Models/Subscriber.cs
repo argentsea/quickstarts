@@ -1,7 +1,7 @@
 ﻿using System;
 using ArgentSea.Sql;
 
-namespace Quckstart.Sql.Models
+namespace QuickStart.Sql.Models
 {
     public class Subscriber
     {

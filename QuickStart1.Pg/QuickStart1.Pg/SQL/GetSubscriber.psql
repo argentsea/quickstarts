@@ -1,0 +1,3 @@
+﻿SELECT subscribers.subid, subscribers.subname, subscribers.enddate 
+FROM qs1.subscribers 
+WHERE subscribers.subid = @subid;

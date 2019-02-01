@@ -3,10 +3,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
-using Quckstart.Sql.Stores;
-using Quckstart.Sql.Models;
+using QuickStart.Sql.Stores;
+using QuickStart.Sql.Models;
 
-namespace Quckstart.Sql.Controllers
+namespace QuickStart.Sql.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

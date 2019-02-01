@@ -9,8 +9,9 @@ namespace QuickStart1.Pg.Stores
 {
     public class SubscriberStore
     {
-        private readonly PgDatabases.DataConnection _db;
+        private readonly PgDatabases.Database _db;
         private readonly ILogger<SubscriberStore> _logger;
+
         public SubscriberStore(PgDatabases dbs, ILogger<SubscriberStore> logger)
         {
             _db = dbs["MyDatabase"];
@@ -19,10 +20,9 @@ namespace QuickStart1.Pg.Stores
 
         public async Task<Subscriber> GetSubscriber(int subscriberId, CancellationToken cancellation)
         {
-            var prms = new QueryParameterCollection()
-                .AddPgIntegerInputParameter("_subid", subscriberId)
-                .CreateOutputParameters<Subscriber>(_logger);
-            return await _db.MapOutputAsync<Subscriber>("ws.GetSubscriber", prms, cancellation);
+            var prms = new ParameterCollection()
+                .AddPgIntegerInputParameter("subid", subscriberId);
+            return await _db.Read.MapReaderAsync<Subscriber>(Queries.GetSubscriber, prms, cancellation);
         }
     }
 }

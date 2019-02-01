@@ -1,5 +1,5 @@
 ﻿using ArgentSea;
-using ArgentSea.Sql;
+using ArgentSea.Pg;
 using ShardKey = ArgentSea.ShardKey<byte, int>;
 
 namespace QuickStart2.Sql.Models
@@ -7,10 +7,10 @@ namespace QuickStart2.Sql.Models
     public class CustomerListItem
     {
         [MapShardKey('c', "@CustomerId")]
-        [MapToSqlInt("@CustomerId")]
+        [MapToPgInteger("@CustomerId")]
         public ShardKey CustomerKey { get; set; }
 
-        [MapToSqlNVarChar("@Name", 255)]
+        [MapToPgVarchar("@Name", 255)]
         public string Name { get; set; }
     }
 }

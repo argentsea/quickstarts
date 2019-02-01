@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace QuickStart.Sql
+namespace QuickStart2.Pg
 {
     public class Program
     {

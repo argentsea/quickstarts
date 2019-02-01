@@ -1,6 +1,6 @@
 ﻿using ArgentSea;
-using ArgentSea.Sql;
-using ShardChild = ArgentSea.ShardChild<byte, int, short>;
+using ArgentSea.Pg;
+using ShardChild = ArgentSea.ShardChild<short, int, short>;
 
 namespace QuickStart2.Sql.Models
 {
@@ -16,31 +16,30 @@ namespace QuickStart2.Sql.Models
         }
 
         [MapShardChild('L', "CustomerId", "LocationId")]
-        [MapToSqlInt("CustomerId")]
-        [MapToSqlSmallInt("LocationId")]
+        [MapToPgInteger("CustomerId")]
+        [MapToPgSmallint("LocationId")]
         public ShardChild CustomerLocationKey { get; set; }
 
-        [MapToSqlTinyInt("LocationTypeId")]
+        [MapToPgSmallint("LocationTypeId")]
         public LocationType Type { get; set; }
 
-        [MapToSqlNVarChar("StreetAddress", 255)]
+        [MapToPgVarchar("StreetAddress", 255)]
         public string StreetAddress { get; set; }
 
-        [MapToSqlNVarChar("Locality", 100)]
+        [MapToPgVarchar("Locality", 100)]
         public string Locality { get; set; }
 
-        [MapToSqlNVarChar("Region", 100)]
+        [MapToPgVarchar("Region", 100)]
         public string Region { get; set; }
 
-        [MapToSqlNVarChar("PostalCode", 25)]
+        [MapToPgVarchar("PostalCode", 25)]
         public string PostalCode { get; set; }
 
-        [MapToSqlNChar("Iso3166", 2)]
+        [MapToPgVarchar("Iso3166", 2)]
         public string Iso3166 { get; set; }
 
         [MapToModel]
-        public CoordinatesModel Coordinates { get; set; }
-        //public CoordinatesModel Coordinates { get; } = new CoordinatesModel();
+        public CoordinatesModel Coordinates { get; } = new CoordinatesModel();
 
     }
 }

@@ -1,25 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
     <UserSecretsId>e7a28670-02e6-4700-a8ad-e24a3fc9481a</UserSecretsId>
+    <RootNamespace>QuickStart.Sql</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Sql\SetupDB.sql" />
+    <None Remove="SqlSetup\SetupDB.sql" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Sql\SetupDB.sql" />
+    <Content Include="SqlSetup\SetupDB.sql" />
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="SQL\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="2.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,6 +34,12 @@
     <Reference Include="Polly">
       <HintPath>..\..\..\..\..\Users\HicksJ\.nuget\packages\polly\6.1.0\lib\netstandard2.0\Polly.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Stores\SubscriberStore.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
   </ItemGroup>
 
 </Project>

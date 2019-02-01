@@ -25,6 +25,7 @@ namespace QuickStart1.Pg
 
         public void ConfigureServices(IServiceCollection services)
         {
+            ArgentSea.QueryStatement.Extension = "psql";
             services.AddLogging();
             services.AddPgServices(Configuration);
             services.AddSingleton<SubscriberStore>();

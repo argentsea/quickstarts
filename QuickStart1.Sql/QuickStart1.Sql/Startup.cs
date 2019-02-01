@@ -10,9 +10,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ArgentSea.Sql;
-using Quckstart.Sql.Stores;
+using QuickStart.Sql.Stores;
 
-namespace Quckstart.Sql
+namespace QuickStart.Sql
 {
     public class Startup
     {

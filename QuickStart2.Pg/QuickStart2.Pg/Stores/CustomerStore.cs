@@ -2,16 +2,29 @@
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ArgentSea;
-using ArgentSea.Sql;
+using ArgentSea.Pg;
 using System.Collections.Generic;
 using QuickStart2.Sql.Models;
-using QuickStart2.Sql.InputModels;
+using QuickStart2.Pg.InputModels;
 using Microsoft.SqlServer.Server;
-using ShardKey = ArgentSea.ShardKey<byte, int>;
+using ShardKey = ArgentSea.ShardKey<short, int>;
 
 
-namespace QuickStart2.Sql.Stores
+namespace QuickStart2.Pg.Stores
 {
+    internal static class DataProcedures
+    {
+        //This is a COMPREHENSIVE list of stored procedure names.
+        //You can use the reference count to determine what is still in use (and where).
+        public static string CustomerGet { get => @"rd.CustomerGet"; }
+        public static string ContactsGet { get => @"rd.ContactsGet "; }
+        public static string CustomerCreate { get => @"wt.CustomerCreate"; }
+        public static string CustomerList { get => @"rd.CustomerList"; }
+        public static string CustomerSave { get => @"wt.CustomerSave"; }
+        public static string CustomerDelete { get => @"wt.CustomerDelete"; }
+        // ...
+    }
+
     public class CustomerStore
     {
         //private readonly SqlShardSets<byte>.ShardSet _shardSet;
@@ -28,14 +41,14 @@ namespace QuickStart2.Sql.Stores
 
         public async Task<CustomerModel> GetCustomer(ShardKey customerKey, CancellationToken cancellation)
         {
-            var prms = new ParameterCollection()
-                .AddSqlIntInputParameter("@CustomerId", customerKey.RecordId)
+            var prms = new QueryParameterCollection()
+                .AddPgIntegerInputParameter("CustomerId", customerKey.RecordId)
                 .CreateOutputParameters<CustomerModel>(_logger);
-            return await _shardSet[customerKey].Read.MapOutputAsync<CustomerModel, LocationModel, ContactModel>(Queries.CustomerGet, prms, cancellation);
+            return await _shardSet[customerKey].Read.MapOutputAsync<CustomerModel, LocationModel, ContactModel>(DataProcedures.CustomerGet, prms, cancellation);
         }
         public async Task<IList<CustomerListItem>> ListCustomers(CancellationToken cancellation)
         {
-            var cust = await _shardSet.ReadAll.MapListAsync<CustomerListItem>(Queries.CustomerList, new ParameterCollection(), cancellation);
+            var cust = await _shardSet.ReadAll.MapListAsync<CustomerListItem>(DataProcedures.CustomerList, new QueryParameterCollection(), cancellation);
             return cust;
         }
         public async Task<ShardKey> CreateCustomer(CustomerInputModel customer, CancellationToken cancellation)
@@ -50,13 +63,13 @@ namespace QuickStart2.Sql.Stores
                 contactRecords.Add(cnt);
             });
 
-            var prms = new ParameterCollection()
-                .AddSqlIntOutputParameter("@CustomerId")
+            var prms = new QueryParameterCollection()
+                .AddPgIntegerOutputParameter("@CustomerId")
                 .CreateInputParameters<CustomerInputModel>(customer, _logger)
                 .AddSqlTableValuedParameter<LocationModel>("@Locations", customer.Locations, _logger)
                 .AddSqlTableValuedParameter("@Contacts", contactRecords);
-            await _shardSet.DefaultShard.Write.RunAsync(Queries.CustomerCreate, prms, "@ShardId", cancellation);
-            return new ShardKey(oCUSTOMER, _shardSet.DefaultShard.ShardId, (int)prms["@CustomerId"].Value);
+            await _shardSet.DefaultShard.Write.RunAsync(DataProcedures.CustomerCreate, prms, "ShardId", cancellation);
+            return new ShardKey(oCUSTOMER, _shardSet.DefaultShard.ShardId, (int)prms["CustomerId"].Value);
         }
         public async Task SaveCustomer(CustomerModel customer, CancellationToken cancellation)
         {
@@ -65,16 +78,16 @@ namespace QuickStart2.Sql.Stores
             ((List<ContactModel>)customer.Contacts).ForEach(x =>
             {
                 var cnt = new SqlDataRecord(metaData);
-                cnt.SetByte(0, x.ContactKey.ShardId);
+                cnt.SetInt16(0, x.ContactKey.ShardId);
                 cnt.SetInt32(1, x.ContactKey.RecordId);
                 contactRecords.Add(cnt);
             });
 
-            var prms = new ParameterCollection()
+            var prms = new QueryParameterCollection()
                 .CreateInputParameters<CustomerModel>(customer, _logger)
                 .AddSqlTableValuedParameter<LocationModel>("@Locations", customer.Locations, _logger)
                 .AddSqlTableValuedParameter("@Contacts", contactRecords);
-            await _shardSet.DefaultShard.Write.RunAsync(Queries.CustomerSave, prms, "@ShardId", cancellation);
+            await _shardSet.DefaultShard.Write.RunAsync(DataProcedures.CustomerSave, prms, "@ShardId", cancellation);
         }
         public async Task DeleteCustomer(ShardKey customerKey, CancellationToken cancellation)
         {
@@ -82,10 +95,10 @@ namespace QuickStart2.Sql.Stores
             {
                 throw new System.Exception("The request to delete a customer failed because this is not a customer key.");
             }
-            var prms = new ParameterCollection()
-                .AddSqlIntInputParameter("@CustomerId", customerKey.RecordId)
-                .AddSqlTinyIntInputParameter("@CustomerId", customerKey.ShardId);
-            await _shardSet.Write.RunAsync(Queries.CustomerDelete, prms, cancellation); //Deleting on all shards, as their may be foreign Contact references to this Customer
+            var prms = new QueryParameterCollection()
+                .AddPgIntegerInputParameter("@CustomerId", customerKey.RecordId)
+                .AddPgSmallintInputParameter("@CustomerId", customerKey.ShardId);
+            await _shardSet.Write.RunAsync(DataProcedures.CustomerDelete, prms, cancellation); //Deleting on all shards, as their may be foreign Contact references to this Customer
         }
     }
 }

@@ -3,10 +3,10 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ArgentSea;
 using ArgentSea.Sql;
-using Quckstart.Sql.Models;
+using QuickStart.Sql.Models;
 
 
-namespace Quckstart.Sql.Stores
+namespace QuickStart.Sql.Stores
 {
     public class SubscriberStore
     {
@@ -21,10 +21,10 @@ namespace Quckstart.Sql.Stores
         public async Task<Subscriber> GetSubscriber(int subscriberId, CancellationToken cancellation)
         {
             var db = _dbs["MyDatabase"];
-            var prms = new QueryParameterCollection()
+            var prms = new ParameterCollection()
                 .AddSqlIntInputParameter("@SubId", subscriberId)
                 .CreateOutputParameters<Subscriber>(_logger);
-            return await db.MapOutputAsync<Subscriber>("ws.GetSubscriber", prms, cancellation);
+            return await db.Read.MapOutputAsync<Subscriber>(Queries.GetSubscriber, prms, cancellation);
         }
     }
 }

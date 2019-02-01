@@ -7,10 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuickStart1.Pg", "QuickStar
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuickStart1.Test", "QuickStart1.Test\QuickStart1.Test.csproj", "{89357F13-4168-4AA4-A52C-E8BB0FF46CC7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArgentSea.Pg", "..\..\ArgentSea.Pg\src\ArgentSea.Pg.csproj", "{1C2AC831-897D-4C10-A77E-34DB26F515CF}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArgentSea", "..\..\ArgentSea.Shared\src\ArgentSea.csproj", "{B3684902-352C-4FC6-9054-7DCC15AED629}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,14 +21,6 @@ Global
 		{89357F13-4168-4AA4-A52C-E8BB0FF46CC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89357F13-4168-4AA4-A52C-E8BB0FF46CC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89357F13-4168-4AA4-A52C-E8BB0FF46CC7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1C2AC831-897D-4C10-A77E-34DB26F515CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1C2AC831-897D-4C10-A77E-34DB26F515CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1C2AC831-897D-4C10-A77E-34DB26F515CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1C2AC831-897D-4C10-A77E-34DB26F515CF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B3684902-352C-4FC6-9054-7DCC15AED629}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B3684902-352C-4FC6-9054-7DCC15AED629}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B3684902-352C-4FC6-9054-7DCC15AED629}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B3684902-352C-4FC6-9054-7DCC15AED629}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

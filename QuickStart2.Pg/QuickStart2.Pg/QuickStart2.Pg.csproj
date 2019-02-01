@@ -2,37 +2,27 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
-    <UserSecretsId>c10cdf6d-52af-4c68-a776-dd1e3da224cf</UserSecretsId>
+    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="2.2.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="5.0.0-beta" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="ArgentSea">
-      <HintPath>..\..\..\ArgentSea.Pg\src\bin\Debug\netstandard2.0\ArgentSea.dll</HintPath>
+      <HintPath>..\..\..\ArgentSea.Shared\src\bin\Debug\netstandard2.0\ArgentSea.dll</HintPath>
     </Reference>
     <Reference Include="ArgentSea.Pg">
       <HintPath>..\..\..\ArgentSea.Pg\src\bin\Debug\netstandard2.0\ArgentSea.Pg.dll</HintPath>
     </Reference>
     <Reference Include="Npgsql">
-      <HintPath>..\..\..\..\..\Users\HicksJ\.nuget\packages\npgsql\4.0.4\lib\netstandard2.0\Npgsql.dll</HintPath>
+      <HintPath>..\..\..\..\..\Users\HicksJ\.nuget\packages\npgsql\4.0.3\lib\netstandard2.0\Npgsql.dll</HintPath>
     </Reference>
     <Reference Include="Polly">
       <HintPath>..\..\..\..\..\Users\HicksJ\.nuget\packages\polly\6.1.0\lib\netstandard2.0\Polly.dll</HintPath>
     </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="SQL\GetSubscriber.psql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>

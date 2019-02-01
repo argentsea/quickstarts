@@ -1,15 +1,15 @@
-﻿using ArgentSea.Sql;
+﻿using ArgentSea.Pg;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 
 
-namespace QuickStart2.Sql
+namespace QuickStart2.Pg
 {
-    public class ShardSets : SqlShardSets<byte>
+    public class ShardSets : PgShardSets<short>
     {
         public ShardSets(
-            IOptions<SqlShardConnectionOptions<byte>> configOptions,
-            IOptions<SqlGlobalPropertiesOptions> globalOptions,
+            IOptions<PgShardConnectionOptions<short>> configOptions,
+            IOptions<PgGlobalPropertiesOptions> globalOptions,
             ILogger<ShardSets> logger
         ) : base(configOptions, globalOptions, logger)
         {
