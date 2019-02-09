@@ -1,0 +1,22 @@
+﻿DELETE shd.contactcustomers
+FROM shd.contactcustomers
+WHERE contactcustomers.customershardid = @shardid
+	AND contactcustomers.customerid = @customerid;
+DO
+$$
+BEGIN
+IF @shardid = shd.shardid()
+BEGIN
+	DELETE shd.customercontacts
+	FROM shd.customercontacts
+	WHERE customercontacts.customerid = @customerid
+
+	DELETE shd.locations
+	FROM shd.locations
+	WHERE locations.customerid = @customerid
+
+	DELETE shd.customers
+	FROM shd.customers
+	WHERE customers.customerid = @customerid
+END
+$$;

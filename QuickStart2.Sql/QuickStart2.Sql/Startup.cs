@@ -75,7 +75,6 @@ namespace QuickStart2.Sql
             {
                 o.SwaggerEndpoint("/swagger/v1/swagger.json", "ArgentSea QuickStart 2");
                 o.RoutePrefix = "swagger"; //default
-                
             });
         }
     }

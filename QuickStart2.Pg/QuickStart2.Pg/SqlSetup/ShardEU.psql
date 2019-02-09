@@ -4,23 +4,26 @@ WARNING: Run the ShardSetup SQL script first!
 This walkthrough creates 4 databases (shards), roughly corresponding to EU (Europe), US (North America), ZH (Asia),  and BR (South America).
 After you have executed ServerSetup, and then run ShardSetup on each database, run this script on the EU database.
 */
-USE CustomerShardEU;
-GO
--- CREATE FUNCTIONS
-CREATE OR ALTER FUNCTION ws.ShardId()
-RETURNS tinyint
-AS
+-- CREATE SHARD-SPECIFIC FUNCTION
+CREATE OR REPLACE FUNCTION shd.shardid()
+RETURNS Smallint
+AS $$
 BEGIN
 	RETURN 2;
 END;
-GO
-DELETE FROM shd.ContactCustomers;
-DELETE FROM shd.CustomerContacts;
-DELETE FROM shd.Locations;
-DELETE FROM shd.Customers;
-DELETE FROM shd.Contacts;
-GO
-INSERT INTO shd.Customers (CustomerId, CustomerTypeId, Name)
+$$ LANGUAGE plpgsql
+IMMUTABLE
+LEAKPROOF
+SECURITY DEFINER;
+
+-- CREATE SHARD DATA
+DELETE FROM shd.contactcustomers;
+DELETE FROM shd.Customercontacts;
+DELETE FROM shd.locations;
+DELETE FROM shd.customers;
+DELETE FROM shd.contacts;
+
+INSERT INTO shd.customers (customerid, customertypeid, Name)
 VALUES (1, 1, N'Swan & Son Ltd'),
 	(2, 1, N'Dawson & Sanderson Ltd'),
 	(3, 1, N'Pembrokeshire District Services'),
@@ -33,8 +36,8 @@ VALUES (1, 1, N'Swan & Son Ltd'),
 	(10, 2, N'Solutions financières'),
 	(11, 4, N'Services d’Investissement Regency'),
 	(12, 1, N'Gruppo di Gestione Delle Vendite');
-GO
-INSERT INTO shd.Contacts (ContactId, FullName)
+
+INSERT INTO shd.contacts (contactid, fullname)
 VALUES (1, N'Dionisia Cory'),
 	(2, N'Kira Harland'),
 	(3, N'Zach Keen'),
@@ -53,8 +56,8 @@ VALUES (1, N'Dionisia Cory'),
 	(16, N'Cédric Laurent'),
 	(17, N'Dionisia Serpico'),
 	(18, N'Stefano Leoni');
-GO
-INSERT INTO shd.ContactCustomers (CustomerId, CustomerShardId, ContactId)
+
+INSERT INTO shd.contactcustomers (customerid, customershardid, contactid)
 VALUES (1, 2, 1),
 	(2, 2, 2),
 	(3, 2, 3),
@@ -76,8 +79,8 @@ VALUES (1, 2, 1),
 	(16, 2, 11),
 	(17, 2, 12),
 	(18, 2, 12);
-GO
-INSERT INTO shd.CustomerContacts (ContactId, ContactShardId, CustomerId)
+
+INSERT INTO shd.customercontacts (contactid, contactshardid, customerid)
 VALUES (1, 2, 1),
 	(2, 2, 2),
 	(3, 2, 3),
@@ -97,8 +100,8 @@ VALUES (1, 2, 1),
 	(16, 2, 11),
 	(17, 2, 12),
 	(18, 2, 12);
-GO
-INSERT INTO shd.Locations(CustomerId, LocationId, LocationTypeId, StreetAddress, Locality, Region, PostalCode, Iso3166, Latitude, Longitude)
+
+INSERT INTO shd.locations(customerid, locationid, locationtypeid, streetaddress, locality, region, postalcode, iso3166, latitude, longitude)
 VALUES (1, 1, 4, N'14 Bedford Way', N'North Shields', N'', N'NE29 6RX', N'UK', 55.012936, -1.448773),
 	(1, 2, 4, N'95  Circle Way', N'Welney', N'', N'PE14 5UJ', N'UK', 52.528421, 0.278721),
 	(2, 1, 1, N'77  Well Lane', N'Pebworth', N'', N'CV37 6UB', N'UK', 52.118293, -1.811528),
@@ -124,4 +127,4 @@ VALUES (1, 1, 4, N'14 Bedford Way', N'North Shields', N'', N'NE29 6RX', N'UK', 5
 	(11, 4, 3, N'20 rue des Lacs', N'Hénin-Beaumont', N'Nord-Pas-de-Calais', N'62110', N'FR', 50.413327, 2.954768),
 	(12, 1, 1, N'Via Torre di Mezzavia 72', N'Villagrande', N'Chieti', N'66020', N'IT', 42.329558, 14.364362),
 	(12, 2, 4, N'Via Lagrange 60', N'Celleno', N'Viterbo', N'01020', N'IT', 42.558882, 12.128616);
-GO
+

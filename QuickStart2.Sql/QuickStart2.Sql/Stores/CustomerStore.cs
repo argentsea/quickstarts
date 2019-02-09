@@ -84,7 +84,7 @@ namespace QuickStart2.Sql.Stores
             }
             var prms = new ParameterCollection()
                 .AddSqlIntInputParameter("@CustomerId", customerKey.RecordId)
-                .AddSqlTinyIntInputParameter("@CustomerId", customerKey.ShardId);
+                .AddSqlTinyIntInputParameter("@ShardId", customerKey.ShardId);
             await _shardSet.Write.RunAsync(Queries.CustomerDelete, prms, cancellation); //Deleting on all shards, as their may be foreign Contact references to this Customer
         }
     }

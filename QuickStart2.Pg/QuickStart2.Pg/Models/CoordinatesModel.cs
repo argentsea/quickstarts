@@ -1,13 +1,13 @@
 ﻿using ArgentSea.Pg;
 
-namespace QuickStart2.Sql.Models
+namespace QuickStart2.Pg.Models
 {
     public class CoordinatesModel
     {
-        [MapToPgDouble("Latitude")]
+        [MapToPgDouble("latitude")]
         public double Latitude { get; set; }
 
-        [MapToPgDouble("Longitude")]
+        [MapToPgDouble("longitude")]
         public double Longitude { get; set; }
     }
 }

@@ -1,0 +1,25 @@
+﻿DO
+$$
+DECLARE newcustomerid integer;
+BEGIN
+
+	INSERT INTO shd.customers (customertypeid, name)
+	VALUES (@customertypeid, @name)
+	RETURNING customerid INTO newcustomerid;
+
+	INSERT shd.locations (customerid, locationid, locationtypeid, streetaddress, locality, region, postalcode, iso3166, latitude, longitude)
+	SELECT newcustomerid, --
+		Location.LocationId, Location.LocationTypeId, Location.StreetAddress, Location.Locality, 
+		Location.Region, Location.PostalCode, Location.Iso3166, Location.Latitude, Location.Longitude
+	FROM @Locations As Location;
+
+	INSERT INTO shd.CustomerContacts (CustomerId, ContactShardId, ContactId)
+	SELECT @CustomerId, Contacts.ShardId, Contacts.RecordId
+	FROM @Contacts As Contacts;
+
+	INSERT INTO shd.ContactCustomers (ContactId, CustomerShardId, CustomerId)
+	SELECT Contacts.RecordId, @ShardId, @CustomerId
+	FROM @Contacts As Contacts
+	WHERE Contacts.ShardId = @ShardId;
+END
+$$

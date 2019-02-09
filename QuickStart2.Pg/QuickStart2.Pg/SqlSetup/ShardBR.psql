@@ -4,23 +4,26 @@ WARNING: Run the ShardSetup SQL script first!
 This walkthrough creates 4 databases (shards), roughly corresponding to EU (Europe), US (North America), ZH (Asia),  and BR (South America).
 After you have executed ServerSetup, and then run ShardSetup on each database, run this script on the BR database.
 */
-USE CustomerShardBR;
-GO
--- CREATE FUNCTIONS
-CREATE OR ALTER FUNCTION ws.ShardId()
-RETURNS tinyint
-AS
+-- CREATE SHARD-SPECIFIC FUNCTION
+CREATE OR REPLACE FUNCTION shd.shardid()
+RETURNS Smallint
+AS $$
 BEGIN
 	RETURN 3;
 END;
-GO
-DELETE FROM shd.ContactCustomers;
-DELETE FROM shd.CustomerContacts;
-DELETE FROM shd.Locations;
-DELETE FROM shd.Customers;
-DELETE FROM shd.Contacts;
-GO
-INSERT INTO shd.Customers (CustomerId, CustomerTypeId, Name)
+$$ LANGUAGE plpgsql
+IMMUTABLE
+LEAKPROOF
+SECURITY DEFINER;
+
+-- CREATE SHARD DATA
+DELETE FROM shd.contactcustomers;
+DELETE FROM shd.Customercontacts;
+DELETE FROM shd.locations;
+DELETE FROM shd.customers;
+DELETE FROM shd.contacts;
+
+INSERT INTO shd.customers (customerid, customertypeid, Name)
 VALUES (1, 1, N'Recursos de Liquidação Financeira'),
 	(2, 3, N'Especialistas em Restaurantes'),
 	(3, 1, N'Especialistas em Automação'),
@@ -30,8 +33,8 @@ VALUES (1, 1, N'Recursos de Liquidação Financeira'),
 	(7, 2, N'Los Especialistas en Ventas y Marketing.'),
 	(8, 2, N'La Tienda de Autopartes'),
 	(9, 2, N'El Banco de la Paz');
-GO
-INSERT INTO shd.Contacts (ContactId, FullName)
+
+INSERT INTO shd.contacts (contactid, fullname)
 VALUES (1, N'Modesto Fernandes'),
 	(2, N'Dênis Palmeiro'),
 	(3, N'Estefânia Mateus'),
@@ -50,8 +53,8 @@ VALUES (1, N'Modesto Fernandes'),
 	(16, N'Basilio Nieves'),
 	(17, N'Griselda Giménez'),
 	(18, N'Roberta Castellano');
-GO
-INSERT INTO shd.ContactCustomers (CustomerId, CustomerShardId, ContactId)
+
+INSERT INTO shd.contactcustomers (customerid, customershardid, contactid)
 VALUES (1, 3, 1),
 	(2, 3, 1), --
 	(3, 3, 1),
@@ -69,13 +72,12 @@ VALUES (1, 3, 1),
 	(12, 3, 5),
 	(13, 3, 6),
 	(14, 3, 7),
-	(14, 3, 7),
 	(15, 3, 8),
 	(16, 3, 8),
 	(17, 3, 9),
 	(18, 3, 9);
-GO
-INSERT INTO shd.CustomerContacts (ContactId, ContactShardId, CustomerId)
+
+INSERT INTO shd.customercontacts (contactid, contactshardid, customerid)
 VALUES (1, 3, 1),
 	(2, 3, 1),
 	(2, 4, 1), --foreign
@@ -96,8 +98,8 @@ VALUES (1, 3, 1),
 	(16, 3, 8),
 	(17, 3, 9),
 	(18, 3, 9);
-GO
-INSERT INTO shd.Locations(LocationId, CustomerId, LocationTypeId, StreetAddress, Locality, Region, PostalCode, Iso3166, Latitude, Longitude)
+
+INSERT INTO shd.locations(customerid, locationid, locationtypeid, streetaddress, locality, region, postalcode, iso3166, latitude, longitude)
 VALUES (1, 1, 1, N'Rua Palmares 271', N'Teresina', N'Piauí', N'64017-760', N'BR', -5.093374, -42.751256),
 	(1, 2, 4, N'Avenida Geraldo Hilário da Silva 1161', N'Araraquara', N'São Paulo', N'14805-290', N'BR', -21.779457, -48.178341),
 	(2, 1, 1, N'Alameda A 703', N'Vila Velha', N'Espírito Santo', N'29129-654', N'BR', -20.370124, -40.316256),
@@ -118,4 +120,3 @@ VALUES (1, 1, 1, N'Rua Palmares 271', N'Teresina', N'Piauí', N'64017-760', N'BR
 	(7, 3, 2, N'Av. Isabel La Católica 103-La Victoria', N'Lima', N'Lima y Callao', N'', N'PE', -12.054137, -77.055767),
 	(8, 1, 2, N'Avenida Pablo Neruda, 02461', N'IX Región', N'Temuco', N'', N'CL', -38.738442, -72.618172),
 	(9, 1, 3, N'Av. Chacaltaya final # 4', N'', N'La Paz', N'', N'BO', -16.496424, -68.129659);
-GO

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using ArgentSea;
 using ArgentSea.Pg;
-using QuickStart2.Sql.Models;
+using QuickStart2.Pg.Models;
 using ShardKey = ArgentSea.ShardKey<short, int>;
 
 namespace QuickStart2.Pg.InputModels

@@ -1,0 +1,101 @@
+﻿DO
+$do$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE  rolname = 'webreader') THEN
+        CREATE USER webreader WITH PASSWORD 'Pwd123456';
+    END IF;
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE  rolname = 'webwriter') THEN
+    	CREATE USER webwriter WITH PASSWORD 'Pwd567890';
+	END IF;
+
+    CREATE SCHEMA IF NOT EXISTS rd;
+    CREATE SCHEMA IF NOT EXISTS wt;
+    CREATE SCHEMA IF NOT EXISTS shd;
+    CREATE SCHEMA IF NOT EXISTS ref;
+
+	GRANT USAGE ON  SCHEMA shd TO webreader;
+	GRANT USAGE ON  SCHEMA shd TO webwriter;
+	GRANT USAGE ON  SCHEMA ref TO webreader;
+	GRANT USAGE ON  SCHEMA ref TO webwriter;
+
+	GRANT SELECT ON ALL TABLES IN SCHEMA shd TO webreader;
+	GRANT SELECT ON ALL TABLES IN SCHEMA ref TO webreader;
+	GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA shd TO webreader;
+	GRANT SELECT ON ALL TABLES IN SCHEMA ref TO webwriter;
+	GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA shd TO webwriter;
+	GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA shd TO webwriter;
+
+	CREATE TABLE IF NOT EXISTS ref.customertypes (
+	  customertypeid smallint NOT NULL,
+	  name varchar(255) NOT NULL,
+	  CONSTRAINT pk_refcustomertypes PRIMARY KEY (customertypeid),
+	  CONSTRAINT uc_refcustomertypes_name UNIQUE (name)
+	);
+
+	INSERT INTO ref.customertypes (customertypeid, name)
+	VALUES (1, 'Walk-in'),
+		(2, 'Subscriber'),
+		(3, 'Franchisee'),
+		(4, 'Partner');
+
+
+	CREATE TABLE IF NOT EXISTS ref.locationtypes (
+	  locationtypeid smallint NOT NULL,
+	  name varchar(255) NOT NULL,
+	  CONSTRAINT pk_reflocationtypes PRIMARY KEY (locationtypeid),
+	  CONSTRAINT uc_reflocationtypes_name UNIQUE (name)
+	);
+
+	INSERT INTO ref.locationtypes(locationtypeid, name)
+	VALUES (1, 'Retail store'),
+		(2, N'Pickup/dropoff'),
+		(3, N'Warehouse'),
+		(4, N'Office');
+
+	CREATE TABLE IF NOT EXISTS shd.customers (
+	  customerid int NOT NULL,
+	  customertypeid smallint NOT NULL,
+	  name varchar(255) NOT NULL,
+	  CONSTRAINT pk_shdcustomers PRIMARY KEY (customerid),
+	  CONSTRAINT fk_shdcustomers_customertypeid FOREIGN KEY (customertypeid) REFERENCES ref.customertypes (customertypeid)
+	);
+
+	CREATE TABLE shd.contacts (
+		contactid int NOT NULL,
+		fullname varchar(255) NOT NULL,
+		CONSTRAINT pk_shdcontacts PRIMARY KEY (contactid)
+	);
+
+	CREATE TABLE IF NOT EXISTS shd.customercontacts (
+		customerid int NOT NULL,
+		contactshardid smallint NOT NULL,
+		contactid int NOT NULL,
+		CONSTRAINT pk_shdcustomercontacts PRIMARY KEY (customerid, contactid, contactshardid),
+		CONSTRAINT fk_shdcustomercontacts_customerid FOREIGN KEY (customerid) REFERENCES shd.customers (customerid)
+	);
+
+	CREATE TABLE IF NOT EXISTS shd.contactcustomers (
+		contactid int NOT NULL,
+		customershardid smallint NOT NULL,
+		customerid int NOT NULL,
+		CONSTRAINT pk_shdcontactcustomers PRIMARY KEY (contactId, customerId, customershardid),
+		CONSTRAINT fk_shdcontactcustomers_contactid FOREIGN KEY (ContactId) REFERENCES shd.contacts (contactid)
+	);
+
+	CREATE TABLE IF NOT EXISTS shd.locations (
+		customerid int NOT NULL,
+		locationid smallint NOT NULL,
+		locationtypeid smallint NOT NULL,
+		streetaddress varchar(255) NOT NULL,
+		locality varchar(100) NOT NULL,
+		region varchar(100) NOT NULL,
+		postalcode varchar(25) NOT NULL,
+		iso3166 char(2) NOT NULL,
+		latitude float NULL,
+		longitude float NULL,
+		CONSTRAINT pk_shdlocations PRIMARY KEY (customerid, locationid),
+		CONSTRAINT fk_shdlocations_locationtypes FOREIGN KEY (locationtypeid) REFERENCES ref.locationtypes (locationtypeid),
+		CONSTRAINT fk_shdlocations_customers FOREIGN KEY (customerid) REFERENCES shd.customers (customerid)
+	);
+END;
+$do$

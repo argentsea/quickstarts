@@ -10,7 +10,7 @@ namespace QuickStart1.Pg
 {
     public static class Queries
     {
-        private static readonly Lazy<QueryStatement> _getSubscriber = QueryStatement.Create("GetSubscriber", new[] { "subid" });
         public static QueryStatement GetSubscriber => _getSubscriber.Value;
+        private static readonly Lazy<QueryStatement> _getSubscriber = QueryStatement.Create("GetSubscriber", new[] { "subid" });
     }
 }

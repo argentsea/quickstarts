@@ -1,0 +1,25 @@
+﻿SELECT customers.customertypeid, customers.name
+FROM shd.customers
+WHERE customers.customerid = @customerid;
+
+SELECT customerid,
+	locations.locationid, 
+	locations.locationtypeid, 
+	locations.streetaddress, 
+	locations.locality, 
+	locations.region,
+	locations.postalcode,
+	locations.iso3166,
+	locations.latitude, 
+	locations.longitude
+FROM shd.locations
+WHERE locations.customerid = @customerid;
+
+SELECT customercontacts.contactshardId, 
+	customercontacts.contactId,
+	contacts.fullname 
+FROM shd.customercontacts
+	LEFT OUTER JOIN shd.contacts
+	ON CustomerContacts.contactId = contacts.contactId
+		AND customercontacts.contactshardId = shd.shardid()
+WHERE customercontacts.customerId = @customerid;

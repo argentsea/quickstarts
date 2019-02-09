@@ -2,7 +2,7 @@
 using ArgentSea.Pg;
 using ShardChild = ArgentSea.ShardChild<short, int, short>;
 
-namespace QuickStart2.Sql.Models
+namespace QuickStart2.Pg.Models
 {
     public class LocationModel
     {
@@ -15,27 +15,27 @@ namespace QuickStart2.Sql.Models
             Partner = 4
         }
 
-        [MapShardChild('L', "CustomerId", "LocationId")]
-        [MapToPgInteger("CustomerId")]
-        [MapToPgSmallint("LocationId")]
+        [MapShardChild('L', "customerid", "locationid")]
+        [MapToPgInteger("customerid")]
+        [MapToPgSmallint("locationid")]
         public ShardChild CustomerLocationKey { get; set; }
 
-        [MapToPgSmallint("LocationTypeId")]
+        [MapToPgSmallint("locationtypeid")]
         public LocationType Type { get; set; }
 
-        [MapToPgVarchar("StreetAddress", 255)]
+        [MapToPgVarchar("streetaddress", 255)]
         public string StreetAddress { get; set; }
 
-        [MapToPgVarchar("Locality", 100)]
+        [MapToPgVarchar("locality", 100)]
         public string Locality { get; set; }
 
-        [MapToPgVarchar("Region", 100)]
+        [MapToPgVarchar("region", 100)]
         public string Region { get; set; }
 
-        [MapToPgVarchar("PostalCode", 25)]
+        [MapToPgVarchar("postalcode", 25)]
         public string PostalCode { get; set; }
 
-        [MapToPgVarchar("Iso3166", 2)]
+        [MapToPgVarchar("iso3166", 2)]
         public string Iso3166 { get; set; }
 
         [MapToModel]

@@ -2,7 +2,7 @@
 using ArgentSea;
 using ArgentSea.Pg;
 
-namespace QuickStart2.Sql.Models
+namespace QuickStart2.Pg.Models
 {
     public class CustomerModel : CustomerListItem
     {
@@ -14,7 +14,7 @@ namespace QuickStart2.Sql.Models
             Partner = 4
         }
 
-        [MapToPgSmallint("CustomerTypeId")]
+        [MapToPgSmallint("customertypeid")]
         public CustomerType Type { get; set; }
 
         public IList<LocationModel> Locations { get; set; } = new List<LocationModel>();

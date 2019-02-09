@@ -63,7 +63,7 @@ namespace QuickStart2.Pg
                     var contextFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
                     if (!(contextFeature is null))
                     {
-                        await context.Response.WriteAsync(new ErrorModel(contextFeature.Error).ToJson());
+                        await context.Response.WriteAsync(ErrorResult.CaptureToJSON(500, contextFeature.Error));
                     }
                 });
             });
@@ -75,7 +75,6 @@ namespace QuickStart2.Pg
             {
                 o.SwaggerEndpoint("/swagger/v1/swagger.json", "ArgentSea QuickStart 2");
                 o.RoutePrefix = "swagger"; //default
-
             });
         }
     }
