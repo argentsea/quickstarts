@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using QuickStart2.Pg.Models;
 using QuickStart2.Pg.InputModels;
 using Microsoft.SqlServer.Server;
+using ArgentSea.QueryBatch;
 using ShardKey = ArgentSea.ShardKey<short, int>;
 
 
@@ -17,7 +18,6 @@ namespace QuickStart2.Pg.Stores
     {
         private readonly ShardSets.ShardSet _shardSet;
         private readonly ILogger<CustomerStore> _logger;
-        private const char oCUSTOMER = 'c';
 
         public CustomerStore(ShardSets shardSets, ILogger<CustomerStore> logger)
         {
@@ -29,7 +29,15 @@ namespace QuickStart2.Pg.Stores
         {
             var prms = new ParameterCollection()
                 .AddPgIntegerInputParameter("customerid", customerKey.RecordId);
-            return await _shardSet[customerKey].Read.MapReaderAsync<CustomerModel, CustomerModel, LocationModel, ContactModel>(Queries.CustomerGet, prms, cancellation);
+            var result = await _shardSet[customerKey].Read.MapReaderAsync<CustomerModel, CustomerModel, LocationModel, ContactModel>(Queries.CustomerGet, prms, cancellation);
+            var foreignShards = ShardKey<short, int>.ShardListForeign(customerKey.ShardId, result.Contacts);
+            if (foreignShards.Count > 0)
+            {
+                prms.AddPgSmallintInputParameter("shardId", customerKey.ShardId);
+                var foreignContacts = await _shardSet.ReadAll.MapListAsync<ContactModel>(Queries.ContactsGet, prms, foreignShards, cancellation);
+                ShardKey.Merge<ContactModel>(result.Contacts, foreignContacts);
+            }
+            return result;
         }
         public async Task<IList<CustomerListItem>> ListCustomers(CancellationToken cancellation)
         {
@@ -39,23 +47,21 @@ namespace QuickStart2.Pg.Stores
 
         public async Task<ShardKey> CreateCustomer(CustomerInputModel customer, CancellationToken cancellation)
         {
-            var metaData = new SqlMetaData[] { new SqlMetaData("ShardId", System.Data.SqlDbType.TinyInt), new SqlMetaData("RecordId", System.Data.SqlDbType.Int) };
-            var contactRecords = new List<SqlDataRecord>();
-            customer.Contacts.ForEach(x =>
-            {
-                var cnt = new SqlDataRecord(metaData);
-                cnt.SetByte(0, x.ShardId);
-                cnt.SetInt32(1, x.RecordId);
-                contactRecords.Add(cnt);
-            });
+            var prms = new ParameterCollection();
+            //KeyQueryBatch<short, int> batch = new KeyQueryBatch<short, int>();
+            //batch.Add(customer.Contacts, "tmpContacts", new MapToPgSmallintAttribute("contactshardid"), new MapToPgIntegerAttribute("contactid"));
+            //batch.Add(customer.Locations, "tmpLocations");
+            //batch.Add(Queries.CustomerSave, DataOrigins.Customer, "", "");
+            //var custKey = await _shardSet.DefaultShard.Write.ExecuteBatchAsync(batch, cancellation);
+            var batch = new ShardBatch<short, ShardKey<short, int>>()
+                .Add(customer.Contacts, "tmpContacts", new MapToPgSmallintAttribute("contactshardid"), new MapToPgIntegerAttribute("contactid"))
+                .Add(customer.Locations, "tmpLocations")
+                .Add(Queries.CustomerCreate)
+                .Add(Queries.CustomerSave, prms, DataOrigins.Customer, "", "");
+            var custKey = await _shardSet.DefaultShard.Write.ExecuteBatchAsync(batch, cancellation);
 
-            var prms = new ParameterCollection()
-                .AddPgIntegerOutputParameter("customerid")
-                .CreateInputParameters<CustomerInputModel>(customer, _logger)
-                .AddSqlTableValuedParameter<LocationModel>("@Locations", customer.Locations, _logger)
-                .AddSqlTableValuedParameter("@Contacts", contactRecords);
-            await _shardSet.DefaultShard.Write.RunAsync(Queries.CustomerCreate, prms, "ShardId", cancellation);
-            return new ShardKey(oCUSTOMER, _shardSet.DefaultShard.ShardId, (int)prms["CustomerId"].Value);
+            var batch2 = new ShardBatch<short>();
+            return custKey;
         }
 
         //public async Task SaveCustomer(CustomerModel customer, CancellationToken cancellation)
@@ -78,7 +84,7 @@ namespace QuickStart2.Pg.Stores
         //}
         public async Task DeleteCustomer(ShardKey customerKey, CancellationToken cancellation)
         {
-            if (customerKey.Origin.SourceIndicator != oCUSTOMER)
+            if (customerKey.Origin != DataOrigins.Customer)
             {
                 throw new System.Exception("The request to delete a customer failed because this is not a customer key.");
             }

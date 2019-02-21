@@ -4,7 +4,7 @@ using ShardChild = ArgentSea.ShardChild<short, int, short>;
 
 namespace QuickStart2.Pg.Models
 {
-    public class LocationModel
+    public class LocationModel : IKeyedChildModel<short, int, short>
     {
 
         public enum LocationType : byte
@@ -15,10 +15,10 @@ namespace QuickStart2.Pg.Models
             Partner = 4
         }
 
-        [MapShardChild('L', "customerid", "locationid")]
+        [MapShardChild(DataOrigins.Location, "customerid", "locationid")]
         [MapToPgInteger("customerid")]
         [MapToPgSmallint("locationid")]
-        public ShardChild CustomerLocationKey { get; set; }
+        public ShardChild Key { get; set; }
 
         [MapToPgSmallint("locationtypeid")]
         public LocationType Type { get; set; }

@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading;
 using Microsoft.AspNetCore.Mvc;
-using ArgentSea;
-using ArgentSea.Sql;
 using QuickStart2.Sql.Stores;
 using QuickStart2.Sql.Models;
 using QuickStart2.Sql.InputModels;
@@ -29,29 +25,6 @@ namespace QuickStart2.Sql.Controllers
         public async Task<ActionResult<IEnumerable<CustomerListItem>>> Get(CancellationToken cancellation)
         {
             return Ok(await _store.ListCustomers(cancellation));
-
-            //_dbConfig.SqlDbConnections[""].DatabaseKey;
-            //_dbConfig.SqlDbConnections[""].DataResilienceKey;
-            //_dbConfig.SqlDbConnections[""].SecurityKey;
-            //_dbConfig.SqlDbConnections[""].DataConnection.ApplicationIntent;
-            //_dbConfig.SqlDbConnections[""].DataConnection.ApplicationName;
-            //_dbConfig.SqlDbConnections[""].DataConnection.ConnectionDescription;
-
-            //_shardConfig.SqlShardSets[""].DataResilienceKey;.
-            //_shardConfig.SqlShardSets[""].SecurityKey;
-            //_shardConfig.SqlShardSets[""].ShardSetKey;.
-            //_shardConfig.SqlShardSets[""].Shards[0].ShardId;
-            //_shardConfig.SqlShardSets[""].Shards[0].ReadConnection;
-            //_shardConfig.SqlShardSets[""].Shards[0].WriteConnection;
-            //_shardConfig.SqlShardSets[""].Shards[0].WriteConnection.ApplicationIntent;
-            //_shardConfig.SqlShardSets[""].Shards[0].WriteConnection.ApplicationName;
-            //_shardConfig.SqlShardSets[""].Shards[0].WriteConnection.ConnectionDescription;
-
-            //_dbConfig.SqlDbConnections[0].DataConnection.DataResilienceKey
-            //_dbConfig.SqlDbConnections[0].DataConnection.SecurityKey;
-            //_dbConfig.SqlDbConnections[0].DataConnection.ApplicationIntent
-
-
         }
 
         // GET api/values/ABCDEFG

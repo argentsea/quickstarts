@@ -13,6 +13,6 @@ namespace QuickStart2.Sql.InputModels
 
         public List<LocationModel> Locations { get; set; } = new List<LocationModel>();
 
-        public List<ShardKey<byte, int>> Contacts { get; set; } = new List<ShardKey<byte, int>>();
+        public List<ShardKey> Contacts { get; set; } = new List<ShardKey>();
     }
 }
