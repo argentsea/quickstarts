@@ -11,8 +11,14 @@ namespace QuickStart2.Pg
     public static QueryStatement ContactsGet => _contactsGet.Value;
     private static readonly Lazy<QueryStatement> _contactsGet = QueryStatement.Create("ContactsGet", new[] { "subid" });
 
-    public static QueryStatement CustomerCreate => _customerCreate.Value;
-    private static readonly Lazy<QueryStatement> _customerCreate = QueryStatement.Create("CustomerCreate", new[] { "shardid", "customertypeid", "name" });
+        public static QueryStatement ContactCustomersDelete => _contactsCustomersDelete.Value;
+        private static readonly Lazy<QueryStatement> _contactsCustomersDelete = QueryStatement.Create("ContactCustomersDelete", new[] { "customershardid", "customerid" });
+
+        public static QueryStatement ContactCustomersCreate => _contactCustomersCreate.Value;
+        private static readonly Lazy<QueryStatement> _contactCustomersCreate = QueryStatement.Create("ContactCustomersCreate", new[] { "customershardid", "customerid" });
+
+        public static QueryStatement CustomerCreate => _customerCreate.Value;
+        private static readonly Lazy<QueryStatement> _customerCreate = QueryStatement.Create("CustomerCreate", new[] { "shardid", "customertypeid", "name" });
 
         public static QueryStatement CustomerDelete => _customerDelete.Value;
         private static readonly Lazy<QueryStatement> _customerDelete = QueryStatement.Create("_customerDelete", new[] { "shardid", "customerid" });

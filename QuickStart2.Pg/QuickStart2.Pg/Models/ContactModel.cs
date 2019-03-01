@@ -1,16 +1,14 @@
 ﻿using ArgentSea;
 using ArgentSea.Pg;
+using System.ComponentModel.DataAnnotations;
 using ShardKey = ArgentSea.ShardKey<short, int>;
 
 namespace QuickStart2.Pg.Models
 {
-    public class ContactModel : IKeyedModel<short, int>
+    public class ContactModel : ContactListItem
     {
-        [MapShardKey(DataOrigins.Contact, "contactid")]
-        [MapToPgInteger("contactid")]
-        public ShardKey Key { get; set; }
+        public string Email { get; set; }
 
-        [MapToPgVarchar("fullname", 255)]
-        public string Name { get; set; }
+        public string Phone { get; set; }
     }
 }

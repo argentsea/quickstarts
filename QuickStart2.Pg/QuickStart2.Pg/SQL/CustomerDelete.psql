@@ -1,12 +1,20 @@
-﻿DELETE shd.contactcustomers
-FROM shd.contactcustomers
-WHERE contactcustomers.customershardid = @shardid
-	AND contactcustomers.customerid = @customerid;
-DO
+﻿DO
 $$
 BEGIN
-IF @shardid = shd.shardid()
-BEGIN
+	IF @shardid <> shd.shardid() THEN
+		RAISE EXCEPTION 'The provided shard id argument does not reference the current shard. Data corruption may result from this misconfiguration.';
+	END IF;
+
+	SELECT DISTINCT customercontacts.contactshardid
+	FROM shd.customercontacts
+	WHERE customercontacts.customerid = @customerid
+		AND customercontacts.contactshardid <> @shardid;
+
+	DELETE shd.contactcustomers
+	FROM shd.contactcustomers
+	WHERE contactcustomers.customershardid = @shardid
+		AND contactcustomers.customerid = @customerid;
+
 	DELETE shd.customercontacts
 	FROM shd.customercontacts
 	WHERE customercontacts.customerid = @customerid

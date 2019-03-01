@@ -28,6 +28,7 @@ namespace QuickStart2.Sql.Stores
 
         public async Task<CustomerModel> GetCustomer(ShardKey customerKey, CancellationToken cancellation)
         {
+            customerKey.ThrowIfInvalidOrigin(Origins.Customer);
             var prms = new ParameterCollection()
                 .AddSqlIntInputParameter("@CustomerId", customerKey.RecordId)
                 .CreateOutputParameters<CustomerModel>(_logger);
@@ -40,6 +41,7 @@ namespace QuickStart2.Sql.Stores
         }
         public async Task<ShardKey> CreateCustomer(CustomerInputModel customer, CancellationToken cancellation)
         {
+
             var metaData = new SqlMetaData[] { new SqlMetaData("ShardId", System.Data.SqlDbType.TinyInt), new SqlMetaData("RecordId", System.Data.SqlDbType.Int) };
             var contactRecords = new List<SqlDataRecord>();
             customer.Contacts.ForEach(x =>
@@ -78,10 +80,7 @@ namespace QuickStart2.Sql.Stores
         }
         public async Task DeleteCustomer(ShardKey customerKey, CancellationToken cancellation)
         {
-            if (customerKey.Origin.SourceIndicator != oCUSTOMER)
-            {
-                throw new System.Exception("The request to delete a customer failed because this is not a customer key.");
-            }
+            customerKey.ThrowIfInvalidOrigin(oCUSTOMER);
             var prms = new ParameterCollection()
                 .AddSqlIntInputParameter("@CustomerId", customerKey.RecordId)
                 .AddSqlTinyIntInputParameter("@ShardId", customerKey.ShardId);

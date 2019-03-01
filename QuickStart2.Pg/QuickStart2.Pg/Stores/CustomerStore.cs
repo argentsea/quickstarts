@@ -6,8 +6,6 @@ using ArgentSea.Pg;
 using System.Collections.Generic;
 using QuickStart2.Pg.Models;
 using QuickStart2.Pg.InputModels;
-using Microsoft.SqlServer.Server;
-using ArgentSea.QueryBatch;
 using ShardKey = ArgentSea.ShardKey<short, int>;
 
 
@@ -27,15 +25,17 @@ namespace QuickStart2.Pg.Stores
 
         public async Task<CustomerModel> GetCustomer(ShardKey customerKey, CancellationToken cancellation)
         {
+            customerKey.ThrowIfInvalidOrigin(DataOrigins.Customer);
             var prms = new ParameterCollection()
                 .AddPgIntegerInputParameter("customerid", customerKey.RecordId);
             var result = await _shardSet[customerKey].Read.MapReaderAsync<CustomerModel, CustomerModel, LocationModel, ContactModel>(Queries.CustomerGet, prms, cancellation);
+            // Get data from foreign shards, if any
             var foreignShards = ShardKey<short, int>.ShardListForeign(customerKey.ShardId, result.Contacts);
             if (foreignShards.Count > 0)
             {
                 prms.AddPgSmallintInputParameter("shardId", customerKey.ShardId);
-                var foreignContacts = await _shardSet.ReadAll.MapListAsync<ContactModel>(Queries.ContactsGet, prms, foreignShards, cancellation);
-                ShardKey.Merge<ContactModel>(result.Contacts, foreignContacts);
+                var foreignContacts = await _shardSet.ReadAll.MapListAsync<ContactListItem>(Queries.ContactsGet, prms, foreignShards, cancellation);
+                ShardKey.Merge<ContactListItem>(result.Contacts, foreignContacts);
             }
             return result;
         }
@@ -47,51 +47,81 @@ namespace QuickStart2.Pg.Stores
 
         public async Task<ShardKey> CreateCustomer(CustomerInputModel customer, CancellationToken cancellation)
         {
-            var prms = new ParameterCollection();
-            //KeyQueryBatch<short, int> batch = new KeyQueryBatch<short, int>();
-            //batch.Add(customer.Contacts, "tmpContacts", new MapToPgSmallintAttribute("contactshardid"), new MapToPgIntegerAttribute("contactid"));
-            //batch.Add(customer.Locations, "tmpLocations");
-            //batch.Add(Queries.CustomerSave, DataOrigins.Customer, "", "");
-            //var custKey = await _shardSet.DefaultShard.Write.ExecuteBatchAsync(batch, cancellation);
-            var batch = new ShardBatch<short, ShardKey<short, int>>()
-                .Add(customer.Contacts, "tmpContacts", new MapToPgSmallintAttribute("contactshardid"), new MapToPgIntegerAttribute("contactid"))
-                .Add(customer.Locations, "tmpLocations")
-                .Add(Queries.CustomerCreate)
-                .Add(Queries.CustomerSave, prms, DataOrigins.Customer, "", "");
-            var custKey = await _shardSet.DefaultShard.Write.ExecuteBatchAsync(batch, cancellation);
+            //save the new customer record into the default shard 
+            var customerPrms = new ParameterCollection()
+                .CreateInputParameters<CustomerInputModel>(customer, _logger)
+                .AddPgSmallintInputParameter("shardid", _shardSet.DefaultShard.ShardId);
+            var shardBatch = new ShardBatch<short, ShardKey<short, int>>()
+                .Add(customer.Contacts, "temp-contacts", new MapToPgSmallintAttribute("contactshardid"), new MapToPgIntegerAttribute("contactid"))
+                .Add(customer.Locations, "temp-locations")
+                .Add(Queries.CustomerCreate, customerPrms, DataOrigins.Customer, "newcustomerid");
+            var custKey = await _shardSet.DefaultShard.Write.RunAsync(shardBatch, cancellation);
 
-            var batch2 = new ShardBatch<short>();
-            return custKey;
+            try
+            {   // if there are any foreign shards, save those records into their respective shard.
+                var foreignShards = ShardKey.ShardListForeign(custKey.ShardId, customer.Contacts);
+                if (foreignShards.Count > 0)
+                {
+                    var contactPrms = new ParameterCollection()
+                        .AddPgSmallintInputParameter("customershardid", custKey.ShardId)
+                        .AddPgIntegerInputParameter("customerid", custKey.RecordId);
+                    var setBatch = new ShardSetBatch<short>()
+                        .Add(customer.Contacts, "temp-contacts", new MapToPgSmallintAttribute("contactshardid"), new MapToPgIntegerAttribute("contactid"))
+                        .Add(Queries.ContactCustomersCreate, contactPrms);
+                    await _shardSet.Write.RunAsync(setBatch, foreignShards, cancellation);
+                }
+                return custKey;
+            }
+            catch
+            {
+                // revert
+                await DeleteCustomer(custKey, default(CancellationToken));
+                throw;
+            }
+
+        }
+        public async Task UpdateCustomer(CustomerModel customer, CancellationToken cancellation)
+        {
+            //save the new customer record into the default shard 
+            var customerPrms = new ParameterCollection()
+                .CreateInputParameters<CustomerModel>(customer, _logger);
+
+            var shardBatch = new ShardBatch<short, object>()
+                .Add(customer.Contacts, "temp-contacts")
+                .Add(customer.Locations, "temp-locations")
+                .Add(Queries.CustomerSave, customerPrms);
+            await _shardSet[customer.Key].Write.RunAsync<object>(shardBatch, cancellation);
+
+            // if there are any foreign shards, save those records into their respective shard.
+            var foreignShards = ShardKey.ShardListForeign(customer.Key.ShardId, customer.Contacts);
+            if (foreignShards.Count > 0)
+            {
+                var contactPrms = new ParameterCollection()
+                    .AddPgSmallintInputParameter("customershardid", customer.Key.ShardId)
+                    .AddPgIntegerInputParameter("customerid", customer.Key.RecordId);
+                var setBatch = new ShardSetBatch<short>()
+                    .Add(customer.Contacts, "temp-contacts")
+                    .Add(Queries.ContactCustomersCreate, contactPrms);
+                await _shardSet.Write.RunAsync(setBatch, foreignShards, cancellation);
+            }
         }
 
-        //public async Task SaveCustomer(CustomerModel customer, CancellationToken cancellation)
-        //{
-        //    var metaData = new SqlMetaData[] { new SqlMetaData("ShardId", System.Data.SqlDbType.TinyInt), new SqlMetaData("RecordId", System.Data.SqlDbType.Int) };
-        //    var contactRecords = new List<SqlDataRecord>();
-        //    ((List<ContactModel>)customer.Contacts).ForEach(x =>
-        //    {
-        //        var cnt = new SqlDataRecord(metaData);
-        //        cnt.SetInt16(0, x.ContactKey.ShardId);
-        //        cnt.SetInt32(1, x.ContactKey.RecordId);
-        //        contactRecords.Add(cnt);
-        //    });
-
-        //    var prms = new ParameterCollection()
-        //        .CreateInputParameters<CustomerModel>(customer, _logger)
-        //        .AddSqlTableValuedParameter<LocationModel>("@Locations", customer.Locations, _logger)
-        //        .AddSqlTableValuedParameter("@Contacts", contactRecords);
-        //    await _shardSet.DefaultShard.Write.RunAsync(Queries.CustomerSave, prms, "@ShardId", cancellation);
-        //}
         public async Task DeleteCustomer(ShardKey customerKey, CancellationToken cancellation)
         {
-            if (customerKey.Origin != DataOrigins.Customer)
-            {
-                throw new System.Exception("The request to delete a customer failed because this is not a customer key.");
-            }
-            var prms = new ParameterCollection()
+            customerKey.ThrowIfInvalidOrigin(DataOrigins.Customer);
+            var customerPrms = new ParameterCollection()
                 .AddPgIntegerInputParameter("customerid", customerKey.RecordId)
                 .AddPgSmallintInputParameter("shardid", customerKey.ShardId);
-            await _shardSet.Write.RunAsync(Queries.CustomerDelete, prms, cancellation); //Deleting on all shards, as their may be foreign Contact references to this Customer
+            var shards = await _shardSet[customerKey].Write.ListAsync<short>(Queries.CustomerDelete, customerPrms, "contactshardid", cancellation);
+            if (shards.Count > 0)
+            {
+                var foreignShards = new ShardsValues<short>();
+                foreach (var shd in shards)
+                {
+                    foreignShards.Add(shd);
+                }
+                await _shardSet.Write.RunAsync(Queries.ContactCustomersDelete, customerPrms, foreignShards, cancellation);
+            }
         }
     }
 }

@@ -35,24 +35,28 @@ namespace QuickStart2.Pg.Controllers
             return Ok(await _store.GetCustomer(skey, cancellation));
         }
 
-        // POST api/values
-        //[HttpPost]
-        //public async Task<ActionResult> Post([FromBody] CustomerInputModel customer, CancellationToken cancellation)
-        //{
-        //    var customerKey = await _store.CreateCustomer(customer, cancellation);
-        //    return Ok(customerKey);
-        //}
+        [HttpPost]
+        public async Task<ActionResult> Post([FromBody] CustomerInputModel customer, CancellationToken cancellation)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            return Ok(await _store.CreateCustomer(customer, cancellation));
+        }
 
-        //// PUT api/values/5
-        //[HttpPut]
-        //public async Task<ActionResult> Put([FromBody] CustomerModel customer, CancellationToken cancellation)
-        //{
-        //    await _store.SaveCustomer(customer, cancellation);
-        //    return Ok();
-        //}
+        [HttpPut]
+        public async Task<ActionResult> Put([FromBody] CustomerModel customer, CancellationToken cancellation)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            await _store.UpdateCustomer(customer, cancellation);
+            return Ok();
+        }
 
-        // DELETE api/values/5
-        [HttpDelete("{id}")]
+        [HttpDelete("{key}")]
         public async Task<ActionResult> Delete(string key, CancellationToken cancellation)
         {
             var skey = ShardKey.FromExternalString(key);

@@ -1,0 +1,3 @@
+﻿DELETE FROM shd.contactcustomers
+WHERE customershardid = @customershardid
+	AND customerid = @customerid;

@@ -5,15 +5,14 @@ using ShardKey = ArgentSea.ShardKey<short, int>;
 
 namespace QuickStart2.Pg.Models
 {
-    public class CustomerListItem : IKeyedModel<short, int>
+    public class ContactListItem : IKeyedModel<short, int>
     {
-        [MapShardKey(DataOrigins.Customer, "customerid")]
-        [MapToPgInteger("customerid")]
+        [MapShardKey(DataOrigins.Contact, "contactid")]
+        [MapToPgInteger("contactid")]
         public ShardKey Key { get; set; }
 
         [Required]
-        [StringLength(255, MinimumLength = 2)]
-        [MapToPgVarchar("name", 255)]
+        [MapToPgVarchar("fullname", 255)]
         public string Name { get; set; }
     }
 }

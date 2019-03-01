@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using ArgentSea;
 using ArgentSea.Pg;
+using System.ComponentModel.DataAnnotations;
 
 namespace QuickStart2.Pg.Models
 {
@@ -17,8 +18,9 @@ namespace QuickStart2.Pg.Models
         [MapToPgSmallint("customertypeid")]
         public CustomerType Type { get; set; }
 
+        [Required]
         public IList<LocationModel> Locations { get; set; } = new List<LocationModel>();
 
-        public IList<ContactModel> Contacts { get; set; } = new List<ContactModel>();
+        public IList<ContactListItem> Contacts { get; set; } = new List<ContactListItem>();
     }
 }

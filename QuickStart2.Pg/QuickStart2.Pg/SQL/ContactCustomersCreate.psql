@@ -1,0 +1,4 @@
+﻿INSERT INTO shd.contactcustomers (contactid, customershardid, customerid)
+SELECT temp-contacts.contactid, @customershardid, @customerid
+FROM temp-contacts
+WHERE temp-contacts.contactshardid = shd.shardid();

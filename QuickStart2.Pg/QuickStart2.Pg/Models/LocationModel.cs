@@ -1,5 +1,6 @@
 ﻿using ArgentSea;
 using ArgentSea.Pg;
+using System.ComponentModel.DataAnnotations;
 using ShardChild = ArgentSea.ShardChild<short, int, short>;
 
 namespace QuickStart2.Pg.Models
@@ -23,18 +24,22 @@ namespace QuickStart2.Pg.Models
         [MapToPgSmallint("locationtypeid")]
         public LocationType Type { get; set; }
 
+        [Required]
         [MapToPgVarchar("streetaddress", 255)]
         public string StreetAddress { get; set; }
 
+        [Required]
         [MapToPgVarchar("locality", 100)]
         public string Locality { get; set; }
 
+        [Required]
         [MapToPgVarchar("region", 100)]
         public string Region { get; set; }
 
         [MapToPgVarchar("postalcode", 25)]
         public string PostalCode { get; set; }
 
+        [StringLength(2, MinimumLength = 2)]
         [MapToPgVarchar("iso3166", 2)]
         public string Iso3166 { get; set; }
 
