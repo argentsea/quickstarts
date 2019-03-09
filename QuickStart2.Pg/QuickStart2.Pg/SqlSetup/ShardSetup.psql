@@ -17,6 +17,10 @@ BEGIN
 	GRANT USAGE ON  SCHEMA shd TO webwriter;
 	GRANT USAGE ON  SCHEMA ref TO webreader;
 	GRANT USAGE ON  SCHEMA ref TO webwriter;
+	GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA shd TO webwriter;
+	GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA shd TO webreader;
+	ALTER DEFAULT PRIVILEGES IN SCHEMA shd GRANT USAGE, SELECT ON SEQUENCES TO webwriter;
+	ALTER DEFAULT PRIVILEGES IN SCHEMA shd GRANT USAGE, SELECT ON SEQUENCES TO webreader;
 
 	GRANT SELECT ON ALL TABLES IN SCHEMA shd TO webreader;
 	GRANT SELECT ON ALL TABLES IN SCHEMA ref TO webreader;
@@ -53,7 +57,7 @@ BEGIN
 		(4, N'Office');
 
 	CREATE TABLE IF NOT EXISTS shd.customers (
-	  customerid int NOT NULL,
+	  customerid int GENERATED ALWAYS AS IDENTITY,
 	  customertypeid smallint NOT NULL,
 	  name varchar(255) NOT NULL,
 	  CONSTRAINT pk_shdcustomers PRIMARY KEY (customerid),
@@ -61,7 +65,7 @@ BEGIN
 	);
 
 	CREATE TABLE shd.contacts (
-		contactid int NOT NULL,
+		contactid int GENERATED ALWAYS AS IDENTITY,
 		fullname varchar(255) NOT NULL,
 		CONSTRAINT pk_shdcontacts PRIMARY KEY (contactid)
 	);

@@ -24,6 +24,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="SQL\ContactCustomersCreate.psql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="SQL\ContactCustomersDelete.psql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="SQL\ContactsGet.psql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

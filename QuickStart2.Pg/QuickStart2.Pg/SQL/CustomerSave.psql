@@ -1,66 +1,43 @@
-﻿DO
-$$
-DECLARE newcustomerid integer;
-BEGIN
+﻿UPDATE shd.customers
+SET name = @name,
+	customertypeId = @customertypeid
+WHERE customers.customerid = @customerid;
 
-	IF @shardid <> shd.shardid() THEN
-		RAISE EXCEPTION 'The provided shard id argument does not reference the current shard. Data corruption may result from this misconfiguration.';
-	END IF;
+DELETE FROM shd.locations
+WHERE locations.customerid = @customerid
+	AND locations.locationid NOT IN (SELECT DISTINCT temp_locations.customerid FROM temp_locations);
 
-	UPDATE shd.customers
-	SET name = @name,
-		customertypeId = @customertypeid
-	FROM shd.customers
-	WHERE customers.customerid = @customerid
-		AND (customers.name <> @name OR customers.customertypeid <> @customertypeid)
+INSERT INTO shd.locations (customerid, locationid, locationtypeid, streetaddress, locality, region, postalcode, iso3166, latitude, longitude)
+SELECT customerid, locationid, locationtypeid, streetaddress, locality, region, postalcode, iso3166, latitude, longitude
+FROM temp_locations
+ON CONFLICT (customerid, locationid)
+DO UPDATE SET locationtypeid = EXCLUDED.locationtypeid,
+	streetaddress = EXCLUDED.streetaddress,
+	locality = EXCLUDED.locality,
+	region = EXCLUDED.region,
+	postalcode = EXCLUDED.postalcode,
+	iso3166 = EXCLUDED.iso3166,
+	latitude = EXCLUDED.latitude,
+	longitude = EXCLUDED.longitude;
 
-	DELETE shd.locations
-	FROM shd.locations
-		LEFT OUTER JOIN temp-locations
-		ON temp-locations.customerid = locations.customerid
-			AND temp-locations.locationid = locations.locationid
-	WHERE temp-locations.customerid Is NULL;
+DELETE FROM shd.customercontacts
+USING temp_contacts
+WHERE NOT EXISTS(
+	SELECT FROM temp_contacts
+	WHERE temp_contacts.contactshardid = customercontacts.contactshardid
+		AND temp_contacts.contactid = customercontacts.contactid);
 
-	INSERT INTO shd.locations (customerid, locationid, locationtypeid, streetaddress, locality, region, postalcode, iso3166, latitude, longitude)
-	SELECT customerid, locationid, locationtypeid, streetaddress, locality, region, postalcode, iso3166, latitude, longitude
-	FROM temp-locations
-	ON CONFLICT (customerid, locationid)
-	DO UPDATE SET locationtypeid = EXCLUDED.locationtypeid,
-		streetaddress = EXCLUDED.streetaddress,
-		locality = EXCLUDED.locality,
-		region = EXCLUDED.region,
-		postalcode = EXCLUDED.postalcode,
-		iso3166 = EXCLUDED.iso3166,
-		latitude = EXCLUDED.latitude,
-		longitude = EXCLUDED.longitude;
+INSERT INTO shd.customercontacts (customerid, contactshardId, contactid)
+SELECT @customerid, temp_contacts.contactshardid, temp_contacts.contactid
+FROM temp_contacts
+	LEFT OUTER JOIN shd.customercontacts
+	ON customercontacts.customerid = @customerid
+		AND customercontacts.customershardid = shd.shardid()
+		AND customercontacts.contactid = temp_contacts.contactid
+WHERE temp_contacts.contactshardid = shd.shardid()
+	AND customercontacts.customerid Is NULL;
 
-	DELETE shd.customercontacts
-	FROM shd.customercontacts
-		LEFT OUTER JOIN temp-contacts
-		ON temp-contacts.shardid = customercontacts.contactshardid
-			AND temp-contacts.contactid = customercontacts.contactid
-	WHERE customercontacts.customerid = @customerid
-		AND temp-locations.customerid Is NULL;
-
-	INSERT INTO shd.customercontacts (customerid, contactshardId, contactid)
-	SELECT @customerid, temp-contacts.shardid, temp-contacts.contactid
-	FROM temp-contacts
-		LEFT OUTER JOIN shd.customercontacts
-		ON customershardid.customerid = @customerid
-			AND customercontacts.customershardid = @shardid
-			AND customercontacts.contactid = temp-contacts.contactid
-	WHERE temp-contacts.shardid = @shardid
-		AND customercontacts.customerid Is NULL;
-
-	DELETE shd.contactcustomers
-	FROM shd.contactcustomers
-		LEFT OUTER JOIN temp-contacts
-		ON temp-contacts.shardid = @shardid
-			AND temp-contacts.contactid = contactcustomers.contactid
-	WHERE contactcustomers.customershardid = @shardid
-			AND contactcustomers.customerid = @customerid
-			AND temp-contacts.contactid Is NULL;
-
-END
-$$
-
+DELETE FROM shd.contactcustomers
+WHERE contactcustomers.customerid = @customerid
+	AND contactcustomers.customershardid = shd.shardid()
+	AND contactcustomers.contactid NOT IN (SELECT DISTINCT temp_contacts.contactid FROM temp_contacts);

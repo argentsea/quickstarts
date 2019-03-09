@@ -1,28 +1,17 @@
 ﻿using ArgentSea;
 using ArgentSea.Pg;
+using QuickStart2.Pg.Models;
 using System.ComponentModel.DataAnnotations;
-using ShardChild = ArgentSea.ShardChild<short, int, short>;
 
-namespace QuickStart2.Pg.Models
+namespace QuickStart2.Pg.InputModels
 {
-    public class LocationModel : IKeyedChildModel<short, int, short>
+    public class LocationInputModel
     {
-
-        public enum LocationType : short
-        {
-            RetailStore = 1,
-            DriveThrough = 2,
-            Warehouse = 3,
-            Partner = 4
-        }
-
-        [MapShardChild(DataOrigins.Location, "customerid", "locationid")]
-        [MapToPgInteger("customerid")]
         [MapToPgSmallint("locationid")]
-        public ShardChild Key { get; set; }
+        public short Sequence { get; set; }
 
         [MapToPgSmallint("locationtypeid")]
-        public LocationType Type { get; set; }
+        public LocationModel.LocationType Type { get; set; }
 
         [Required]
         [StringLength(255)]
@@ -49,6 +38,5 @@ namespace QuickStart2.Pg.Models
 
         [MapToModel]
         public CoordinatesModel Coordinates { get; } = new CoordinatesModel();
-
     }
 }

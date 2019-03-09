@@ -28,14 +28,14 @@ namespace QuickStart2.Pg.Stores
             customerKey.ThrowIfInvalidOrigin(DataOrigins.Customer);
             var prms = new ParameterCollection()
                 .AddPgIntegerInputParameter("customerid", customerKey.RecordId);
-            var result = await _shardSet[customerKey].Read.MapReaderAsync<CustomerModel, CustomerModel, LocationModel, ContactModel>(Queries.CustomerGet, prms, cancellation);
-            // Get data from foreign shards, if any
+            var result = await _shardSet[customerKey].Read.MapReaderAsync<CustomerModel, CustomerModel, LocationModel, ContactListItem>(Queries.CustomerGet, prms, cancellation);
+            // Get contact data from foreign shards, if any
             var foreignShards = ShardKey<short, int>.ShardListForeign(customerKey.ShardId, result.Contacts);
             if (foreignShards.Count > 0)
             {
-                prms.AddPgSmallintInputParameter("shardId", customerKey.ShardId);
+                prms.AddPgSmallintInputParameter("customershardid", customerKey.ShardId);
                 var foreignContacts = await _shardSet.ReadAll.MapListAsync<ContactListItem>(Queries.ContactsGet, prms, foreignShards, cancellation);
-                ShardKey.Merge<ContactListItem>(result.Contacts, foreignContacts);
+                result.Contacts = ShardKey.Merge(result.Contacts, foreignContacts);
             }
             return result;
         }
@@ -47,13 +47,14 @@ namespace QuickStart2.Pg.Stores
 
         public async Task<ShardKey> CreateCustomer(CustomerInputModel customer, CancellationToken cancellation)
         {
+            AssignLocationIdSequence(customer.Locations);
             //save the new customer record into the default shard 
             var customerPrms = new ParameterCollection()
                 .CreateInputParameters<CustomerInputModel>(customer, _logger)
                 .AddPgSmallintInputParameter("shardid", _shardSet.DefaultShard.ShardId);
             var shardBatch = new ShardBatch<short, ShardKey<short, int>>()
-                .Add(customer.Contacts, "temp-contacts", new MapToPgSmallintAttribute("contactshardid"), new MapToPgIntegerAttribute("contactid"))
-                .Add(customer.Locations, "temp-locations")
+                .Add(customer.Contacts, "temp_contacts", new MapToPgSmallintAttribute("contactshardid"), new MapToPgIntegerAttribute("contactid"))
+                .Add(customer.Locations, "temp_locations")
                 .Add(Queries.CustomerCreate, customerPrms, DataOrigins.Customer, "newcustomerid");
             var custKey = await _shardSet.DefaultShard.Write.RunAsync(shardBatch, cancellation);
 
@@ -66,7 +67,7 @@ namespace QuickStart2.Pg.Stores
                         .AddPgSmallintInputParameter("customershardid", custKey.ShardId)
                         .AddPgIntegerInputParameter("customerid", custKey.RecordId);
                     var setBatch = new ShardSetBatch<short>()
-                        .Add(customer.Contacts, "temp-contacts", new MapToPgSmallintAttribute("contactshardid"), new MapToPgIntegerAttribute("contactid"))
+                        .Add(customer.Contacts, "temp_contacts", new MapToPgSmallintAttribute("contactshardid"), new MapToPgIntegerAttribute("contactid"))
                         .Add(Queries.ContactCustomersCreate, contactPrms);
                     await _shardSet.Write.RunAsync(setBatch, foreignShards, cancellation);
                 }
@@ -82,13 +83,13 @@ namespace QuickStart2.Pg.Stores
         }
         public async Task UpdateCustomer(CustomerModel customer, CancellationToken cancellation)
         {
+            ValidateNoDuplicateLocationKeys(customer.Key, customer.Locations);
             //save the new customer record into the default shard 
             var customerPrms = new ParameterCollection()
                 .CreateInputParameters<CustomerModel>(customer, _logger);
-
             var shardBatch = new ShardBatch<short, object>()
-                .Add(customer.Contacts, "temp-contacts")
-                .Add(customer.Locations, "temp-locations")
+                .Add(customer.Contacts, "temp_contacts")
+                .Add(customer.Locations, "temp_locations")
                 .Add(Queries.CustomerSave, customerPrms);
             await _shardSet[customer.Key].Write.RunAsync<object>(shardBatch, cancellation);
 
@@ -100,7 +101,7 @@ namespace QuickStart2.Pg.Stores
                     .AddPgSmallintInputParameter("customershardid", customer.Key.ShardId)
                     .AddPgIntegerInputParameter("customerid", customer.Key.RecordId);
                 var setBatch = new ShardSetBatch<short>()
-                    .Add(customer.Contacts, "temp-contacts")
+                    .Add(customer.Contacts, "temp_contacts")
                     .Add(Queries.ContactCustomersCreate, contactPrms);
                 await _shardSet.Write.RunAsync(setBatch, foreignShards, cancellation);
             }
@@ -111,7 +112,7 @@ namespace QuickStart2.Pg.Stores
             customerKey.ThrowIfInvalidOrigin(DataOrigins.Customer);
             var customerPrms = new ParameterCollection()
                 .AddPgIntegerInputParameter("customerid", customerKey.RecordId)
-                .AddPgSmallintInputParameter("shardid", customerKey.ShardId);
+                .AddPgSmallintInputParameter("customershardid", customerKey.ShardId);
             var shards = await _shardSet[customerKey].Write.ListAsync<short>(Queries.CustomerDelete, customerPrms, "contactshardid", cancellation);
             if (shards.Count > 0)
             {
@@ -121,6 +122,40 @@ namespace QuickStart2.Pg.Stores
                     foreignShards.Add(shd);
                 }
                 await _shardSet.Write.RunAsync(Queries.ContactCustomersDelete, customerPrms, foreignShards, cancellation);
+            }
+        }
+        private void AssignLocationIdSequence(IList<LocationInputModel> locations)
+        {
+            for (var i = (short)1; i <= locations.Count; i++)
+            {
+                locations[i-1].Sequence = i;
+            }
+        }
+        private void ValidateNoDuplicateLocationKeys(ShardKey custKey, IList<LocationModel> locations)
+        {
+            short maxId = 0;
+            for (var i = 0; i < locations.Count; i++)
+            {
+                if (locations[i].Key.ChildId > maxId)
+                {
+                    maxId = locations[i].Key.ChildId;
+                }
+                for (var j = 0; j < locations.Count; j++)
+                {
+                    if (i != j  && locations[i].Key == locations[j].Key)
+                    {
+                        throw new System.Exception("Multiple location records have the same key value. The data cannot be saved.");
+                    }
+                }
+            }
+            foreach (var loc in locations)
+            {
+                if (loc.Key.ChildId == 0)
+                {
+                    maxId++;
+                    var key = new ShardChild<short, int, short>(custKey, maxId);
+                    loc.Key = key;
+                }
             }
         }
     }

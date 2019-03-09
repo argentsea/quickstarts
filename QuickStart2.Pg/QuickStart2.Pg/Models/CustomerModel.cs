@@ -2,6 +2,7 @@
 using ArgentSea;
 using ArgentSea.Pg;
 using System.ComponentModel.DataAnnotations;
+using ShardKey = ArgentSea.ShardKey<short, int>;
 
 namespace QuickStart2.Pg.Models
 {

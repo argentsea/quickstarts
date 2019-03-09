@@ -1,4 +1,4 @@
-﻿SELECT customers.customertypeid, customers.name
+﻿SELECT customers.customerid, customers.name, customers.customertypeid
 FROM shd.customers
 WHERE customers.customerid = @customerid;
 

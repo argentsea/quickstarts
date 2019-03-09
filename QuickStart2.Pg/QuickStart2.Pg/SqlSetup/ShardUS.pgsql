@@ -16,6 +16,19 @@ IMMUTABLE
 LEAKPROOF
 SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION shd.validateshard(smallint)
+RETURNS void
+AS $$
+BEGIN
+	IF $1 <> 1 THEN
+		RAISE EXCEPTION 'The client expected shard id %, but this is shard 1. Data corruption may result from this misconfiguration.', $1;
+	END IF;
+END;
+$$ LANGUAGE plpgsql
+IMMUTABLE
+LEAKPROOF
+SECURITY DEFINER;
+
 -- CREATE SHARD DATA
 DELETE FROM shd.contactcustomers;
 DELETE FROM shd.Customercontacts;
@@ -24,6 +37,7 @@ DELETE FROM shd.customers;
 DELETE FROM shd.contacts;
 
 INSERT INTO shd.customers (customerid, customertypeid, Name)
+OVERRIDING SYSTEM VALUE
 VALUES (1, 1, N'Labplus'),
 	(2, 1, N'Planettom Inc.'),
 	(3, 1, N'Matcanlax LLC'),
@@ -41,7 +55,10 @@ VALUES (1, 1, N'Labplus'),
 	(15, 4, N'Zoom Tax'),
 	(16, 3, N'MediaLux');
 
+SELECT setval('shd."customers_customerid_seq"', 16);
+
 INSERT INTO shd.contacts (contactid, fullname)
+OVERRIDING SYSTEM VALUE
 VALUES (1, N'Alexey Jagoda'),
 	(2, N'Lynne Dukes'),
 	(3, N'Orval Viteri'),
@@ -68,6 +85,8 @@ VALUES (1, N'Alexey Jagoda'),
 	(24, N'Marylyn Carman'),
 	(25, N'Paulina Viteri');
 
+SELECT setval('shd."contacts_contactid_seq"', 25);
+
 INSERT INTO shd.contactcustomers (customerid, customershardid, contactid)
 VALUES (1, 1, 1),
 	(2, 1, 2),
@@ -75,10 +94,9 @@ VALUES (1, 1, 1),
 	(3, 1, 4),
 	(3, 1, 5),
 	(3, 1, 6),
-	(4, 1, 7), --
+	(4, 1, 7),
 	(5, 1, 8),
 	(6, 1, 9),
-	(6, 4, 4), --foreign
 	(7, 1, 10),
 	(8, 1, 11),
 	(9, 1, 12),

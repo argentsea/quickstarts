@@ -1,32 +1,20 @@
-﻿DO
-$$
-DECLARE newcustomerid integer;
-BEGIN
+﻿INSERT INTO shd.customers (customertypeid, name)
+VALUES (@customertypeid, @name)
+RETURNING customerid As newcustomerid;
 
-	IF @shardid <> shd.shardid() THEN
-		RAISE EXCEPTION 'The provided shard id argument does not reference the current shard. Data corruption may result from this misconfiguration.';
-	END IF;
+INSERT INTO shd.locations (customerid, locationid, locationtypeid, streetaddress, locality, region, postalcode, iso3166, latitude, longitude)
+SELECT currval('shd."customers_customerid_seq"'), 
+	temp_locations.locationid, temp_locations.locationtypeid, temp_locations.streetaddress, temp_locations.locality, 
+	temp_locations.region, temp_locations.postalcode, temp_locations.iso3166, temp_locations.latitude, temp_locations.longitude
+FROM temp_locations;
 
-	INSERT INTO shd.customers (customertypeid, name)
-	VALUES (@customertypeid, @name)
-	RETURNING customerid INTO newcustomerid;
+INSERT INTO shd.customercontacts (customerid, contactshardid, contactid)
+SELECT currval('shd."customers_customerid_seq"'), temp_contacts.contactshardid, temp_contacts.contactid
+FROM temp_contacts;
 
-	INSERT shd.locations (customerid, locationid, locationtypeid, streetaddress, locality, region, postalcode, iso3166, latitude, longitude)
-	SELECT newcustomerid, 
-		temp-locations.LocationId, temp-locations.LocationTypeId, temp-locations.StreetAddress, temp-locations.Locality, 
-		temp-locations.Region, temp-locations.PostalCode, temp-locations.Iso3166, temp-locations.Latitude, temp-locations.Longitude
-	FROM temp-locations;
+INSERT INTO shd.contactcustomers (contactid, customershardid, customerid)
+SELECT temp_contacts.contactid, temp_contacts.contactshardid, currval('shd."customers_customerid_seq"')
+FROM temp_contacts
+WHERE temp_contacts.contactshardid = @shardid;
 
-	INSERT INTO shd.customercontacts (customerid, contactshardid, contactid)
-	SELECT newustomerId, temp-contacts.shardid, temp-contacts.recordid
-	FROM temp-contacts;
-
-	INSERT INTO shd.contactcustomers (contactid, customershardid, customerid)
-	SELECT temp-contacts.recordid, temp-contacts.shardid, newcustomerid
-	FROM temp-contacts
-	WHERE temp-contacts.shardid = @shardid;
-
-	SELECT newcustomerid;
-
-END
-$$
+SELECT shd.validateshard(@shardid);

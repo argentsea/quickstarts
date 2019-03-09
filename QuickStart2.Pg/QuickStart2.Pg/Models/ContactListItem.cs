@@ -7,7 +7,8 @@ namespace QuickStart2.Pg.Models
 {
     public class ContactListItem : IKeyedModel<short, int>
     {
-        [MapShardKey(DataOrigins.Contact, "contactid")]
+        [MapShardKey(DataOrigins.Contact, "contactshardid", "contactid")]
+        [MapToPgSmallint("contactshardid")]
         [MapToPgInteger("contactid")]
         public ShardKey Key { get; set; }
 

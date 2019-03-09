@@ -1,5 +1,6 @@
-﻿SELECT shd.shardId() As ContactShardId, Contacts.ContactId, Contacts.FullName 
-FROM shd.Contacts
-	INNER JOIN @ContactKeys As ContactKeys
-	ON ContactKeys.RecordId = Contacts.ContactId
-		AND ContactKeys.ShardId = shd.shardId();
+﻿SELECT shd.shardId() As contactshardid, contacts.contactid, contacts.fullname 
+FROM shd.contacts
+	INNER JOIN shd.contactcustomers
+	ON contactcustomers.contactid = contacts.contactid
+WHERE contactcustomers.customershardid = @customershardid
+	AND contactcustomers.customerid = @customerid;
