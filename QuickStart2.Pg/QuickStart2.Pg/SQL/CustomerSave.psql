@@ -32,7 +32,7 @@ SELECT @customerid, temp_contacts.contactshardid, temp_contacts.contactid
 FROM temp_contacts
 	LEFT OUTER JOIN shd.customercontacts
 	ON customercontacts.customerid = @customerid
-		AND customercontacts.customershardid = shd.shardid()
+		AND customercontacts.contactshardid = shd.shardid()
 		AND customercontacts.contactid = temp_contacts.contactid
 WHERE temp_contacts.contactshardid = shd.shardid()
 	AND customercontacts.customerid Is NULL;
@@ -41,3 +41,13 @@ DELETE FROM shd.contactcustomers
 WHERE contactcustomers.customerid = @customerid
 	AND contactcustomers.customershardid = shd.shardid()
 	AND contactcustomers.contactid NOT IN (SELECT DISTINCT temp_contacts.contactid FROM temp_contacts);
+
+INSERT INTO shd.contactcustomers (customerid, customershardId, contactid)
+SELECT @customerid, shd.shardid(), temp_contacts.contactid
+FROM temp_contacts
+	LEFT OUTER JOIN shd.contactcustomers
+	ON contactcustomers.customerid = @customerid
+		AND contactcustomers.customershardid = shd.shardid()
+		AND contactcustomers.contactid = temp_contacts.contactid
+WHERE contactcustomers.customerid Is NULL;
+

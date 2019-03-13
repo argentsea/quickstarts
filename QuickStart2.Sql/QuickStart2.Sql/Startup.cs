@@ -63,7 +63,7 @@ namespace QuickStart2.Sql
                     var contextFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
                     if (!(contextFeature is null))
                     {
-                        await context.Response.WriteAsync(new ErrorModel(contextFeature.Error).ToJson());
+                        await context.Response.WriteAsync(ErrorResult.CaptureToJSON(500, contextFeature.Error));
                     }
                 });
             });

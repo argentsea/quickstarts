@@ -32,27 +32,37 @@ namespace QuickStart2.Sql.Controllers
         public async Task<ActionResult<string>> Get(string key, CancellationToken cancellation)
         {
             var skey = ShardKey.FromExternalString(key);
-            return Ok(await _store.GetCustomer(skey, cancellation));
+            var result = await _store.GetCustomer(skey, cancellation);
+            if (result is null)
+            {
+                return NotFound();
+            }
+            return Ok(result);
         }
 
-        // POST api/values
         [HttpPost]
         public async Task<ActionResult> Post([FromBody] CustomerInputModel customer, CancellationToken cancellation)
         {
-            var customerKey = await _store.CreateCustomer(customer, cancellation);
-            return Ok(customerKey);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            return Ok(await _store.CreateCustomer(customer, cancellation));
         }
 
-        // PUT api/values/5
         [HttpPut]
         public async Task<ActionResult> Put([FromBody] CustomerModel customer, CancellationToken cancellation)
         {
-            await _store.SaveCustomer(customer, cancellation);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            await _store.UpdateCustomer(customer, cancellation);
             return Ok();
         }
 
         // DELETE api/values/5
-        [HttpDelete("{id}")]
+        [HttpDelete("{key}")]
         public async Task<ActionResult> Delete(string key, CancellationToken cancellation)
         {
             var skey = ShardKey.FromExternalString(key);

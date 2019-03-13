@@ -20,6 +20,8 @@ DELETE FROM shd.Locations;
 DELETE FROM shd.Customers;
 DELETE FROM shd.Contacts;
 GO
+SET IDENTITY_INSERT shd.Customers ON;
+GO
 INSERT INTO shd.Customers (CustomerId, CustomerTypeId, Name)
 VALUES (1, 1, N'段飞机零件'),
 	(2, 1, N'杭州汽车打捞'),
@@ -31,6 +33,10 @@ VALUES (1, 1, N'段飞机零件'),
 	(8, 1, N'장난감 및 학습 도구'),
 	(9, 1, N'庭の供給店'), --jp
 	(10, 4, N'ผลิตภัณฑ์กระดาษไทย'); --th
+GO
+SET IDENTITY_INSERT shd.Customers OFF;
+GO
+SET IDENTITY_INSERT shd.Contacts ON;
 GO
 INSERT INTO shd.Contacts (ContactId, FullName)
 VALUES (1, N'段留贤'),
@@ -51,21 +57,23 @@ VALUES (1, N'段留贤'),
 	(16, N'เนติบัณฑิตชินวัตร'), --thai
 	(17, N'คุณหมั่นไพบูลย์');
 GO
+SET IDENTITY_INSERT shd.Contacts OFF;
+GO
 INSERT INTO shd.ContactCustomers (CustomerId, CustomerShardId, ContactId)
 VALUES (1, 4, 1),
 	(2, 4, 1),
 	(2, 3, 1), --foreign
 	(3, 4, 2),
 	(4, 4, 2),
-	(5, 4, 3), --
-	(6, 4, 4), --
-	(7, 4, 4), --
+	(5, 4, 3),
+	(6, 4, 4),
+	(7, 4, 4),
 	(8, 4, 4),
 	(9, 4, 5),
-	(10, 4, 5), --
+	(10, 4, 5),
 	(11, 4, 6),
 	(12, 4, 6),
-	(13, 4, 7), --
+	(13, 4, 7),
 	(14, 4, 8),
 	(15, 4, 8),
 	(16, 4, 9),

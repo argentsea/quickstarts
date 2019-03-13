@@ -4,13 +4,10 @@ using ShardKey = ArgentSea.ShardKey<byte, int>;
 
 namespace QuickStart2.Sql.Models
 {
-    public class ContactModel
+    public class ContactModel : ContactListItem
     {
-        [MapShardKey('C', "ContactId")]
-        [MapToSqlInt("ContactId")]
-        public ShardKey ContactKey { get; set; }
+        public string Email { get; set; }
 
-        [MapToSqlNVarChar("FullName", 255)]
-        public string Name { get; set; }
+        public string Phone { get; set; }
     }
 }

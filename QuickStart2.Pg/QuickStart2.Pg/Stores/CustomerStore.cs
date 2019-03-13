@@ -29,13 +29,16 @@ namespace QuickStart2.Pg.Stores
             var prms = new ParameterCollection()
                 .AddPgIntegerInputParameter("customerid", customerKey.RecordId);
             var result = await _shardSet[customerKey].Read.MapReaderAsync<CustomerModel, CustomerModel, LocationModel, ContactListItem>(Queries.CustomerGet, prms, cancellation);
-            // Get contact data from foreign shards, if any
-            var foreignShards = ShardKey<short, int>.ShardListForeign(customerKey.ShardId, result.Contacts);
-            if (foreignShards.Count > 0)
+            if (!(result is null))
             {
-                prms.AddPgSmallintInputParameter("customershardid", customerKey.ShardId);
-                var foreignContacts = await _shardSet.ReadAll.MapListAsync<ContactListItem>(Queries.ContactsGet, prms, foreignShards, cancellation);
-                result.Contacts = ShardKey.Merge(result.Contacts, foreignContacts);
+                // Get contact data from foreign shards, if any
+                var foreignShards = ShardKey<short, int>.ShardListForeign(customerKey.ShardId, result.Contacts);
+                if (foreignShards.Count > 0)
+                {
+                    prms.AddPgSmallintInputParameter("customershardid", customerKey.ShardId);
+                    var foreignContacts = await _shardSet.ReadAll.MapListAsync<ContactListItem>(Queries.ContactsGet, prms, foreignShards, cancellation);
+                    result.Contacts = ShardKey.Merge(result.Contacts, foreignContacts);
+                }
             }
             return result;
         }
@@ -150,7 +153,7 @@ namespace QuickStart2.Pg.Stores
             }
             foreach (var loc in locations)
             {
-                if (loc.Key.ChildId == 0)
+                if (loc.Key == ShardChild<short, int, short>.Empty)
                 {
                     maxId++;
                     var key = new ShardChild<short, int, short>(custKey, maxId);

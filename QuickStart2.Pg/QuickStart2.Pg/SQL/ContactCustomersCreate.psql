@@ -1,4 +1,14 @@
-﻿INSERT INTO shd.contactcustomers (contactid, customershardid, customerid)
-SELECT temp_contacts.contactid, @customershardid, @customerid
+﻿DELETE FROM shd.contactcustomers
+WHERE contactcustomers.customerid = @customerid
+	AND contactcustomers.customershardid = @customershardid
+	AND contactcustomers.contactid NOT IN (SELECT DISTINCT temp_contacts.contactid FROM temp_contacts WHERE temp_contacts.contactshardid = shd.shardid());
+
+INSERT INTO shd.contactcustomers (customerid, customershardId, contactid)
+SELECT @customerid, @customershardid, temp_contacts.contactid
 FROM temp_contacts
-WHERE temp_contacts.contactshardid = shd.shardid();
+	LEFT OUTER JOIN shd.contactcustomers
+	ON contactcustomers.customerid = @customerid
+		AND contactcustomers.customershardid = @customershardid
+		AND contactcustomers.contactid = temp_contacts.contactid
+WHERE temp_contacts.contactshardid = shd.shardid()
+	AND contactcustomers.customerid Is NULL;

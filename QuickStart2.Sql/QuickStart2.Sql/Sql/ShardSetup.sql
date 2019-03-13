@@ -100,7 +100,7 @@ VALUES (1, 'Retail store'),
 GO
 -- CREATE SHARD TABLES
 CREATE TABLE shd.Customers (
-  CustomerId int NOT NULL,
+  CustomerId int NOT NULL IDENTITY,
   CustomerTypeId tinyint NOT NULL,
   Name nvarchar(255) NOT NULL,
   --LocationId int NOT NULL,
@@ -108,7 +108,7 @@ CREATE TABLE shd.Customers (
   CONSTRAINT FK_ShdCustomers_CustomerTypeId FOREIGN KEY (CustomerTypeId) REFERENCES ref.CustomerTypes (CustomerTypeId)
 );
 CREATE TABLE shd.Contacts (
-	ContactId int NOT NULL,
+	ContactId int NOT NULL IDENTITY,
 	FullName nvarchar(255) NOT NULL,
 	CONSTRAINT PK_ShdContacts PRIMARY KEY (ContactId)
 );
@@ -152,6 +152,8 @@ BEGIN;
 	);
 END;
 GO
+GRANT EXECUTE ON TYPE :: ws.RecordKeys TO webWriter;
+GO
 IF NOT EXISTS(SELECT * FROM sys.types WHERE name = N'CustomerLocations')
 BEGIN;
 	CREATE TYPE ws.CustomerLocations AS TABLE (
@@ -166,6 +168,8 @@ BEGIN;
 		Longitude float NULL
 		);
 END;
+GO
+GRANT EXECUTE ON TYPE :: ws.CustomerLocations TO webWriter;
 GO
 -- CREATE STUB FUNCTION (to manage procedure dependencies)
 CREATE OR ALTER FUNCTION ws.ShardId()
@@ -183,7 +187,6 @@ BEGIN;
 END;
 GO
 CREATE OR ALTER PROCEDURE rd.CustomerGet (
-	@ShardId tinyint,
 	@CustomerId int, 
 	@CustomerTypeId tinyint OUTPUT, 
 	@Name nvarchar(255) OUTPUT
@@ -191,11 +194,6 @@ CREATE OR ALTER PROCEDURE rd.CustomerGet (
 AS
 BEGIN;
 	SET NOCOUNT ON;
-
-	IF @ShardId <> ws.ShardId()
-	BEGIN;
-		THROW 50001, N'The expected shard id is not valid. Data configuration metadata may be corrupted.', 16;
-	END;
 
 	SELECT @CustomerTypeId = Customers.CustomerTypeId, @Name = Customers.Name
 	FROM shd.Customers
@@ -218,49 +216,53 @@ BEGIN;
 	FROM shd.CustomerContacts
 		LEFT OUTER JOIN shd.Contacts
 		ON CustomerContacts.ContactId = Contacts.ContactId
-			AND CustomerContacts.ContactShardId = @ShardId
+			AND CustomerContacts.ContactShardId = ws.ShardId()
 	WHERE CustomerContacts.CustomerId = @CustomerId;
 END;
 GO
-CREATE OR ALTER PROCEDURE rd.ContactsGet(@ContactKeys ws.RecordKeys READONLY)
+CREATE OR ALTER PROCEDURE rd.ContactsGet (
+	@CustomerShardId tinyint,
+	@CustomerId int
+)
 AS
 BEGIN;
-	DECLARE @ShardId tinyint = ws.ShardId();
-	
-	SELECT @ShardId As ContactShardId, Contacts.ContactId, Contacts.FullName 
+SET NOCOUNT ON;
+	SELECT ws.ShardId() As ContactShardId, Contacts.ContactId, Contacts.FullName
 	FROM shd.Contacts
-		INNER JOIN @ContactKeys As ContactKeys
-		ON ContactKeys.RecordId = Contacts.ContactId
-			AND ContactKeys.ShardId = @ShardId;
+		INNER JOIN shd.ContactCustomers
+		ON ContactCustomers.ContactId = Contacts.Contactid
+	WHERE ContactCustomers.CustomerShardId = @CustomerShardId
+		AND ContactCustomers.CustomerId = @CustomerId;
 END;
 GO
-CREATE OR ALTER PROCEDURE wt.CustomerDelete (@ShardId tinyint, @CustomerId int)
-As
+CREATE OR ALTER PROCEDURE wt.CustomerDelete (
+	@CustomerShardId tinyint,
+	@CustomerId int
+)
+AS
 BEGIN;
 	SET NOCOUNT ON;
 	BEGIN TRY;
 		BEGIN TRANSACTION;
 
+		SELECT DISTINCT CustomerContacts.ContactShardId
+		FROM shd.CustomerContacts
+		WHERE CustomerContacts.CustomerId = @CustomerId
+			AND CustomerContacts.ContactShardId <> @CustomerShardId;
 
-		DELETE shd.ContactCustomers
-		FROM shd.ContactCustomers
-		WHERE ContactCustomers.CustomerShardId = @ShardId
+		DELETE FROM shd.ContactCustomers
+		WHERE ContactCustomers.CustomerShardId = @CustomerShardId
 			AND ContactCustomers.CustomerId = @CustomerId;
 
-		IF @ShardId = ws.ShardId()
-		BEGIN;
-			DELETE shd.CustomerContacts
-			FROM shd.CustomerContacts
-			WHERE CustomerContacts.CustomerId = @CustomerId;
+		DELETE FROM shd.CustomerContacts
+		WHERE CustomerContacts.CustomerId = @CustomerId;
 
-			DELETE shd.Locations
-			FROM shd.Locations
-			WHERE Locations.CustomerId = @CustomerId
+		DELETE FROM shd.Locations
+		WHERE Locations.CustomerId = @CustomerId;
 
-			DELETE shd.Customers
-			FROM shd.Customers
-			WHERE Customers.CustomerId = @CustomerId
-		END;
+		DELETE FROM shd.Customers
+		WHERE Customers.CustomerId = @CustomerId;
+
 		COMMIT TRANSACTION;
 	END TRY
 	BEGIN CATCH;
@@ -270,7 +272,6 @@ BEGIN;
 END;
 GO
 CREATE OR ALTER PROCEDURE wt.CustomerSave (
-	@ShardId tinyint,
 	@CustomerId int,
 	@CustomerTypeId tinyint,
 	@Name nvarchar(255),
@@ -279,10 +280,6 @@ CREATE OR ALTER PROCEDURE wt.CustomerSave (
 	)
 As
 BEGIN;
-	IF @ShardId <> ws.ShardId()
-	BEGIN;
-		THROW 50001, N'The expected shard id is not valid. Data configuration metadata may be corrupted.', 16;
-	END;
 	SET NOCOUNT ON;
 	BEGIN TRY;
 		BEGIN TRANSACTION;
@@ -291,9 +288,7 @@ BEGIN;
 		SET Name = @Name,
 			CustomerTypeId = @CustomerTypeId
 		FROM shd.Customers
-		WHERE Customers.CustomerId = @CustomerId
-			AND (Customers.Name <> @Name OR Customers.CustomerTypeId <> @CustomerTypeId)
-
+		WHERE Customers.CustomerId = @CustomerId;
 
 		MERGE shd.Locations As target
 		USING @Locations As source
@@ -337,13 +332,13 @@ BEGIN;
 		WHERE Contacts.RecordId Is NULL;
 
 		INSERT INTO shd.ContactCustomers (ContactId, CustomerShardId, CustomerId)
-		SELECT Contacts.RecordId, @ShardId, @CustomerId
+		SELECT Contacts.RecordId, ws.ShardId(), @CustomerId
 		FROM @Contacts As Contacts
 			LEFT OUTER JOIN shd.ContactCustomers
 			ON ContactCustomers.ContactId = Contacts.RecordId
 				AND ContactCustomers.CustomerId = @CustomerId
-				AND ContactCustomers.CustomerShardId = @ShardId
-		WHERE Contacts.ShardId = @ShardId
+				AND ContactCustomers.CustomerShardId = ws.ShardId()
+		WHERE Contacts.ShardId = ws.ShardId()
 			AND ContactCustomers.ContactId Is NULL;
 
 		DELETE shd.ContactCustomers
@@ -405,5 +400,45 @@ BEGIN;
 		IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 		THROW; 
 	END CATCH;
+END;
+GO
+CREATE PROCEDURE wt.ContactCustomersCreate (
+	@CustomerShardId tinyint,
+	@CustomerId int,
+	@Contacts ws.RecordKeys READONLY
+)
+AS
+BEGIN;
+	SET NOCOUNT ON;
+
+	DELETE shd.ContactCustomers
+	FROM shd.ContactCustomers
+	WHERE ContactCustomers.Customerid = @CustomerId
+		AND ContactCustomers.CustomerShardid = @CustomerShardId
+		AND ContactCustomers.Contactid NOT IN (SELECT DISTINCT tmpContacts.RecordId FROM @Contacts As tmpContacts WHERE tmpContacts.ShardId = ws.Shardid());
+
+	INSERT INTO shd.ContactCustomers (Customerid, CustomerShardId, Contactid)
+	SELECT @CustomerId, @CustomerShardId, tmpContacts.RecordId
+	FROM @Contacts As tmpContacts
+		LEFT OUTER JOIN shd.ContactCustomers
+		ON ContactCustomers.Customerid = @CustomerId
+			AND ContactCustomers.CustomerShardid = @CustomerShardId
+			AND ContactCustomers.Contactid = tmpContacts.RecordId
+	WHERE tmpContacts.ShardId = ws.Shardid()
+		AND ContactCustomers.Customerid Is NULL;
+END;
+GO
+CREATE PROCEDURE wt.ContactCustomersDelete (
+	@CustomerShardId tinyint,
+	@CustomerId int
+)
+AS
+BEGIN;
+	SET NOCOUNT ON;
+
+	DELETE shd.ContactCustomers
+	FROM shd.ContactCustomers
+	WHERE ContactCustomers.CustomerShardId = @CustomerShardId
+		AND ContactCustomers.CustomerId = @CustomerId;
 END;
 GO

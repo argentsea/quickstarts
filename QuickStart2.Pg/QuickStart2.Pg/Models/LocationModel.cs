@@ -17,8 +17,8 @@ namespace QuickStart2.Pg.Models
         }
 
         [MapShardChild(DataOrigins.Location, "customerid", "locationid")]
-        [MapToPgInteger("customerid")]
-        [MapToPgSmallint("locationid")]
+        [MapToPgInteger("customerid", true)]
+        [MapToPgSmallint("locationid", true)]
         public ShardChild Key { get; set; }
 
         [MapToPgSmallint("locationtypeid")]

@@ -20,6 +20,8 @@ DELETE FROM shd.Locations;
 DELETE FROM shd.Customers;
 DELETE FROM shd.Contacts;
 GO
+SET IDENTITY_INSERT shd.Customers ON;
+GO
 INSERT INTO shd.Customers (CustomerId, CustomerTypeId, Name)
 VALUES (1, 1, N'Recursos de Liquidação Financeira'),
 	(2, 3, N'Especialistas em Restaurantes'),
@@ -30,6 +32,10 @@ VALUES (1, 1, N'Recursos de Liquidação Financeira'),
 	(7, 2, N'Los Especialistas en Ventas y Marketing.'),
 	(8, 2, N'La Tienda de Autopartes'),
 	(9, 2, N'El Banco de la Paz');
+GO
+SET IDENTITY_INSERT shd.Customers OFF;
+GO
+SET IDENTITY_INSERT shd.Contacts ON;
 GO
 INSERT INTO shd.Contacts (ContactId, FullName)
 VALUES (1, N'Modesto Fernandes'),
@@ -51,24 +57,26 @@ VALUES (1, N'Modesto Fernandes'),
 	(17, N'Griselda Giménez'),
 	(18, N'Roberta Castellano');
 GO
+SET IDENTITY_INSERT shd.Contacts OFF;
+GO
 INSERT INTO shd.ContactCustomers (CustomerId, CustomerShardId, ContactId)
 VALUES (1, 3, 1),
-	(2, 3, 1), --
+	(2, 3, 1),
 	(3, 3, 1),
-	(4, 3, 2), --
+	(4, 3, 2),
+	(4, 2, 7), --foreign
 	(5, 3, 2),
+	(5, 2, 10), --foreign
 	(6, 3, 3),
+	(6, 2, 9), --foreign
 	(7, 3, 3),
-	(7, 4, 4), --foreign
+	(7, 4, 4), 
 	(8, 3, 4),
 	(9, 3, 4),
-	(9, 2, 6), --foreign
 	(10, 3, 5),
-	(10, 4, 5), --foreign
 	(11, 3, 5),
 	(12, 3, 5),
 	(13, 3, 6),
-	(14, 3, 7),
 	(14, 3, 7),
 	(15, 3, 8),
 	(16, 3, 8),

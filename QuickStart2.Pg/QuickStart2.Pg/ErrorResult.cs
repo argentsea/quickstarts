@@ -77,11 +77,14 @@ namespace QuickStart2.Pg
                     sb.Append($"{ seperator }      \"constraintName\": \"{ HttpUtility.JavaScriptStringEncode(pgErr.ConstraintName) }\"");
                     seperator = ",\r\n";
                 }
-                //if (!string.IsNullOrEmpty(pgErr.Data))
-                //{
-                //    sb.Append($"{ seperator }    \"code\": \"{pgErr.Data}\"");
-                //    seperator = ",\r\n";
-                //}
+                if (!(pgErr.Data is null))
+                {
+                    foreach (var datum in pgErr.Data.Keys)
+                    {
+                        sb.Append($"{ seperator }      \"data-{HttpUtility.JavaScriptStringEncode(datum.ToString())}\": \"{ HttpUtility.JavaScriptStringEncode(pgErr.Data[datum].ToString()) }\"");
+                        seperator = ",\r\n";
+                    }
+                }
                 if (!string.IsNullOrEmpty(pgErr.DataTypeName))
                 {
                     sb.Append($"{ seperator }      \"dataTypeName\": \"{ HttpUtility.JavaScriptStringEncode(pgErr.DataTypeName) }\"");

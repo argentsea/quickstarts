@@ -1,28 +1,21 @@
-﻿using ArgentSea;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using ArgentSea;
 using ArgentSea.Sql;
+using QuickStart2.Sql.Models;
 using System.ComponentModel.DataAnnotations;
-using ShardChild = ArgentSea.ShardChild<byte, int, short>;
 
-namespace QuickStart2.Sql.Models
+namespace QuickStart2.Sql.InputModels
 {
-    public class LocationModel : IKeyedChildModel<byte, int, short>
+    public class LocationInputModel
     {
-
-        public enum LocationType : byte
-        {
-            RetailStore = 1,
-            DriveThrough = 2,
-            Warehouse = 3,
-            Partner = 4
-        }
-
-        [MapShardChild(DataOrigins.Location, "CustomerId", "LocationId")]
-        [MapToSqlInt("CustomerId", true)]
-        [MapToSqlSmallInt("LocationId", true)]
-        public ShardChild Key { get; set; }
+        [MapToSqlSmallInt("LocationId")]
+        public short Sequence { get; set; }
 
         [MapToSqlTinyInt("LocationTypeId")]
-        public LocationType Type { get; set; }
+        public LocationModel.LocationType Type { get; set; }
 
         [Required]
         [StringLength(255)]
@@ -49,6 +42,5 @@ namespace QuickStart2.Sql.Models
 
         [MapToModel]
         public CoordinatesModel Coordinates { get; set; }
-
     }
 }

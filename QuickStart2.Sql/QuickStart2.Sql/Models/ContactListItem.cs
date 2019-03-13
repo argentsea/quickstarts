@@ -5,15 +5,15 @@ using ShardKey = ArgentSea.ShardKey<byte, int>;
 
 namespace QuickStart2.Sql.Models
 {
-    public class CustomerListItem : IKeyedModel<byte, int>
+    public class ContactListItem : IKeyedModel<byte, int>
     {
-        [MapShardKey(DataOrigins.Customer, "@CustomerId")]
-        [MapToSqlInt("@CustomerId", true)]
+        [MapShardKey(DataOrigins.Contact, "ContactShardId", "ContactId")]
+        [MapToSqlTinyInt("ContactShardId", true)]
+        [MapToSqlInt("ContactId", true)]
         public ShardKey Key { get; set; }
 
         [Required]
-        [StringLength(255, MinimumLength = 2)]
-        [MapToSqlNVarChar("@Name", 255, true)]
+        [MapToSqlNVarChar("FullName", 255)]
         public string Name { get; set; }
     }
 }

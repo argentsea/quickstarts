@@ -32,7 +32,12 @@ namespace QuickStart2.Pg.Controllers
         public async Task<ActionResult<string>> Get(string key, CancellationToken cancellation)
         {
             var skey = ShardKey.FromExternalString(key);
-            return Ok(await _store.GetCustomer(skey, cancellation));
+            var result = await _store.GetCustomer(skey, cancellation);
+            if (result is null)
+            {
+                return NotFound();
+            }
+            return Ok(result);
         }
 
         [HttpPost]
