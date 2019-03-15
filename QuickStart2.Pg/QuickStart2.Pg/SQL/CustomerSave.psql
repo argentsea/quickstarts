@@ -1,4 +1,12 @@
-﻿UPDATE shd.customers
+﻿SELECT DISTINCT customercontacts.contactshardid
+FROM shd.customercontacts
+WHERE customercontacts.customerid = @customerid
+	AND customercontacts.contactshardid <> shd.shardid()
+UNION SELECT temp_contacts.contactshardid
+FROM temp_contacts
+WHERE temp_contacts.contactshardid <> shd.shardid();
+
+UPDATE shd.customers
 SET name = @name,
 	customertypeId = @customertypeid
 WHERE customers.customerid = @customerid;

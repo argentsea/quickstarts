@@ -281,8 +281,20 @@ CREATE OR ALTER PROCEDURE wt.CustomerSave (
 As
 BEGIN;
 	SET NOCOUNT ON;
+
+	SELECT DISTINCT CustomerContacts.ContactShardId
+	FROM shd.CustomerContacts
+	WHERE CustomerContacts.CustomerId = @CustomerId
+		AND CustomerContacts.ContactShardId <> ws.ShardId()
+	UNION SELECT tmpContacts.ShardId
+	FROM @Contacts As tmpContacts
+	WHERE tmpContacts.ShardId <> ws.ShardId();
+
 	BEGIN TRY;
 		BEGIN TRANSACTION;
+
+		SELECT DISTINCT CustomerContacts
+		FROM shd.CustomerContacts
 
 		UPDATE shd.Customers
 		SET Name = @Name,

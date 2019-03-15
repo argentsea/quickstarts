@@ -85,23 +85,27 @@ namespace QuickStart2.Sql.Stores
             ValidateNoDuplicateLocationKeys(customer.Key, customer.Locations);
             //save the new customer record into the default shard 
             var metaData = new SqlMetaData[] { new SqlMetaData("ShardId", System.Data.SqlDbType.TinyInt), new SqlMetaData("RecordId", System.Data.SqlDbType.Int) };
-            var contactRecords = MakeRecordKeyUDTs<ContactListItem>(customer.Contacts);
 
             var prms = new ParameterCollection()
-                .CreateInputParameters<CustomerModel>(customer, _logger)
+                .CreateInputParameters(customer, _logger)
                 .AddSqlTableValuedParameter("@Locations", customer.Locations, Queries.CustomerLocationType, _logger)
-                .AddSqlTableValuedParameter("@Contacts", contactRecords);
-            await _shardSet.DefaultShard.Write.RunAsync(Queries.CustomerSave, prms, cancellation);
+                .AddSqlTableValuedParameter<ContactListItem, byte, int>("@Contacts", customer.Contacts, "ShardId", System.Data.SqlDbType.TinyInt, "RecordId", System.Data.SqlDbType.Int);
+            var shards = await _shardSet[customer.Key].Write.ListAsync<byte>(Queries.CustomerSave, prms, "ContactShardid", cancellation);
 
             // if there are any foreign shards, save those records into their respective shard.
-            var foreignShards = ShardKey.ShardListForeign(customer.Key.ShardId, customer.Contacts);
-            if (foreignShards.Count > 0)
+            var allShards = ShardKey.ToShardsValues(customer.Contacts);
+            allShards.Merge(shards);
+            if (allShards.Shards.Keys.Contains(customer.Key.ShardId))
+            {
+                allShards.Shards.Remove(customer.Key.ShardId);
+            }
+            if (shards.Count > 0)
             {
                 var contactPrms = new ParameterCollection()
                     .AddSqlTinyIntInputParameter("@CustomerShardId", customer.Key.ShardId)
                     .AddSqlIntInputParameter("@CustomerId", customer.Key.RecordId)
-                    .AddSqlTableValuedParameter("@Contacts", contactRecords);
-                await _shardSet.Write.RunAsync(Queries.ContactCustomersCreate, contactPrms, foreignShards, cancellation);
+                    .AddSqlTableValuedParameter<ContactListItem, byte, int>("@Contacts", customer.Contacts, "ShardId", System.Data.SqlDbType.TinyInt, "RecordId", System.Data.SqlDbType.Int);
+                await _shardSet.Write.RunAsync(Queries.ContactCustomersCreate, contactPrms, allShards, cancellation);
             }
         }
         public async Task DeleteCustomer(ShardKey customerKey, CancellationToken cancellation)

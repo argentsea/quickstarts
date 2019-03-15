@@ -90,11 +90,11 @@ namespace QuickStart2.Pg.Stores
             //save the new customer record into the default shard 
             var customerPrms = new ParameterCollection()
                 .CreateInputParameters<CustomerModel>(customer, _logger);
-            var shardBatch = new ShardBatch<short, object>()
+            var shardBatch = new ShardBatch<short, List<short>>()
                 .Add(customer.Contacts, "temp_contacts")
                 .Add(customer.Locations, "temp_locations")
-                .Add(Queries.CustomerSave, customerPrms);
-            await _shardSet[customer.Key].Write.RunAsync<object>(shardBatch, cancellation);
+                .Add(Queries.CustomerSave, customerPrms, "contactshardid");
+            var shards = await _shardSet[customer.Key].Write.RunAsync(shardBatch, cancellation);
 
             // if there are any foreign shards, save those records into their respective shard.
             var foreignShards = ShardKey.ShardListForeign(customer.Key.ShardId, customer.Contacts);
