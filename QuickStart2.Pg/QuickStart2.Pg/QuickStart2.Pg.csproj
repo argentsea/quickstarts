@@ -6,21 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ArgentSea.Pg" Version="0.8.3" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Npgsql" Version="4.0.4" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.0.0-beta" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="ArgentSea">
-      <HintPath>..\..\..\ArgentSea.Shared\src\bin\Debug\netstandard2.0\ArgentSea.dll</HintPath>
-    </Reference>
-    <Reference Include="ArgentSea.Pg">
-      <HintPath>..\..\..\ArgentSea.Pg\src\bin\Debug\netstandard2.0\ArgentSea.Pg.dll</HintPath>
-    </Reference>
-    <Reference Include="Polly">
-      <HintPath>..\..\..\..\..\Users\HicksJ\.nuget\packages\polly\6.1.0\lib\netstandard2.0\Polly.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>
